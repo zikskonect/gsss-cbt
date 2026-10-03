@@ -889,19 +889,42 @@ function shareExamWithOptions(examId) {
     shareExamAsCSV(examId);
 }
 
-function handleTeacherImportClick(event) {
+async function handleTeacherImportClick(event) {
     if (event) event.preventDefault();
     console.log('📱 Import exam triggered.');
 
-    // The input already exists in the DOM (rendered with the dashboard)
-    const input = document.getElementById('teacher-import-input');
-    if (!input) {
-        console.error('❌ teacher-import-input not found in DOM');
-        showAlert('Error: File picker not available. Please reload.', 'error');
-        return;
+    // Capacitor native file picker
+    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.FilePicker) {
+        try {
+            const result = await window.Capacitor.Plugins.FilePicker.pickFiles({
+                types: ['text/csv', 'text/comma-separated-values', 'application/csv'],
+                limit: 1,
+                readData: true
+            });
+
+            if (result.files && result.files.length > 0) {
+                const pickedFile = result.files[0];
+                // Construct a File-like object from the result
+                const blob = new Blob(
+                    [Uint8Array.from(atob(pickedFile.data), c => c.charCodeAt(0))],
+                    { type: 'text/csv' }
+                );
+                const file = new File([blob], pickedFile.name, { type: 'text/csv' });
+                await handleExamImport(file);
+            }
+            return;
+        } catch (err) {
+            console.error('FilePicker error:', err);
+            // fall through to standard input
+        }
     }
 
-    // Reset value so the same file can be selected again
+    // Fallback: standard input
+    const input = document.getElementById('teacher-import-input');
+    if (!input) {
+        showAlert('Error: File picker not available.', 'error');
+        return;
+    }
     input.value = '';
     input.click();
 }
