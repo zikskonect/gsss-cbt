@@ -29,6 +29,9 @@ jobs:
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          packages: ''
+          log-accepted-android-sdk-licenses: false
 
       - name: Install npm dependencies
         run: npm install
