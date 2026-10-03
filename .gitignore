@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+
+# Android build artifacts
+android/.gradle/
+android/build/
+android/app/build/
+android/capacitor-cordova-android-plugins/
+android/local.properties
+android/.idea/
+android/*.iml
+android/app/release/
+android/app/debug/
+
+# Brix (old desktop build)
+Brix_Works/
+BRIX-APP/
+*.brix
+
+# Nitron (old mobile build)
+gsss-cbt/
+
+# OS junk
+.DS_Store
+Thumbs.db
+*.log
+
+# IDE
+.vscode/
+.idea/
+
+# Capacitor generated
+android/app/src/main/assets/public/

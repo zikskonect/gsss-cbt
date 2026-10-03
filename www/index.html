@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GSSS - CBT App</title>
+    
+    <script src="tailwindcss.js"></script>
+    <script src="lucide.js"></script>
+    
+    <style>
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 3px; }
+        
+        .no-select {
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        
+        * { transition: all 0.2s ease; }
+
+        .titlebar {
+            height: 32px;
+            background: #6d5e92;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            padding: 0 10px;
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 9999;
+            -webkit-app-region: drag; 
+        }
+
+        .titlebar-button {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            width: 40px;
+            height: 40px;
+            color: white;
+            cursor: pointer;
+            -webkit-app-region: no-drag; 
+        }
+
+        .titlebar-button:hover { background: rgba(255, 255, 255, 0.1); }
+        .titlebar-button.close:hover { background: #4687e9; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen no-select">
+    
+    <div id="app" class="min-h-screen pt-0">
+        <div id="initial-loader" class="flex items-center justify-center min-h-screen">
+            <div class="text-center">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-[#B80236] mx-auto"></div>
+                <p class="mt-4 text-gray-600 font-semibold">GSSS CBT</p>
+                <p id="loading-status" class="mt-2 text-sm text-gray-400">Loading Application...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- SCRIPT LOAD ORDER - DO NOT CHANGE WITHOUT TESTING              -->
+    <!-- ============================================================ -->
+    
+    <!-- 1. STORAGE (Core database layer - no dependencies) -->
+    <script src="storage.js"></script>
+    
+    <!-- 2. CONFIG FILES (No dependencies) -->
+    <script src="js/config/sch_config.js"></script>
+    <script src="js/config/app_config.js"></script>
+    
+    <!-- 3. CORE FILES (Depends on storage.js and config) -->
+    <script src="js/core/state.js"></script>
+    <script src="js/core/utils.js"></script>
+    <script src="js/core/alerts.js"></script>
+    <script src="js/core/auth.js"></script>
+    <script src="js/core/router.js"></script>
+    
+    <!-- 4. SHARED FILES (Depends on core) -->
+    <script src="js/shared/home.render.js"></script>
+    <script src="js/shared/image-handling.js"></script>
+    <script src="js/shared/results-shared.js"></script>
+    <script src="js/shared/schedule.js"></script>
+    <script src="js/shared/sidebar.js"></script>
+    
+    <!-- 5. FEATURE - EXAM OFFICER (Depends on shared) -->
+    <script src="js/features/exam-officer/exam-officer.render.js"></script>
+    <script src="js/features/exam-officer/exam-officer.actions.js"></script>
+    
+    <!-- 6. FEATURE - TEACHER (Depends on shared) -->
+    <script src="js/features/teacher/teacher.render.js"></script>
+    <script src="js/features/teacher/teacher.actions.js"></script>
+    
+    <!-- 7. FEATURE - STUDENT (Depends on shared) -->
+    <script src="js/features/student/student.render.js"></script>
+    <script src="js/features/student/student.actions.js"></script>
+    
+    <!-- 8. MAIN (Application entry point - depends on everything) -->
+    <script src="js/main.js"></script>
+    
+    <script>
+        // Initialize Icons
+        if (window.lucide) {
+            lucide.createIcons();
+        }
+
+        // NOTE: The app is auto-started by main.js's init() call.
+        // No need to call init() here again.
+        
+        window.addEventListener('load', () => {
+            console.log('✅ HTML UI Ready');
+            // The init() in main.js handles the startup
+        });
+    </script>
+</body>
+</html>

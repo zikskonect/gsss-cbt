@@ -1,0 +1,14 @@
+{
+  "name": "gsss-cbt",
+  "version": "1.0.0",
+  "description": "GSSS CBT Exam Platform",
+  "scripts": {
+    "build": "echo no build needed"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.5.2",
+    "@capacitor/cli": "^8.5.2",
+    "@capacitor/core": "^8.5.2",
+    "@capawesome/capacitor-file-picker": "^8.1.0"
+  }
+}
