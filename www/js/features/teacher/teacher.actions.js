@@ -799,85 +799,11 @@ async function shareExamAsCSV(examId) {
 
     try {
         console.log(`📤 Exporting exam: ${exam.exam_id} (${exam.questions.length} questions)`);
-
-        const headers = ['exam_id', 'subject', 'class', 'duration', 'assessment_type', 'questions_json'];
-        const questionsJson = JSON.stringify(exam.questions).replace(/"/g, '""');
-
-        const dataRow = [
-            `"${exam.exam_id}"`,
-            `"${exam.subject}"`,
-            `"${exam.class}"`,
-            `"${exam.duration || 30}"`,
-            `"${exam.assessmentType || 'EXAM'}"`,
-            `"${questionsJson}"`
-        ];
-
-        const csvContent = headers.join(',') + '\n' + dataRow.join(',');
-        const fileName = `${exam.subject.replace(/[^a-z0-9]/gi, '_')}_${exam.class}_Exam.csv`;
-
-        // 1. CAPACITOR NATIVE SHARE (highest priority on mobile)
-        if (window.Capacitor && window.Capacitor.Plugins) {
-            console.log('📱 Detected Capacitor environment');
-            try {
-                const Plugins = window.Capacitor.Plugins;
-                const Filesystem = Plugins.Filesystem;
-                const Share = Plugins.Share;
-
-                if (Filesystem && Share) {
-                    // Write file to Cache directory
-                    const result = await Filesystem.writeFile({
-                        path: fileName,
-                        data: csvContent,
-                        directory: Filesystem.Directory?.Cache || 'CACHE',
-                        encoding: Filesystem.Encoding?.UTF8 || 'utf8'
-                    });
-
-                    // Native Share Sheet — use 'files' array (Capacitor v5+)
-                    await Share.share({
-                        title: `${exam.subject} Exam`,
-                        text: `Exam: ${exam.subject} (${exam.class})`,
-                        files: [result.uri]
-                    });
-
-                    showAlert('✅ Exam shared successfully!', 'success');
-                    return;
-                }
-            } catch (err) {
-                console.error('Capacitor native share error:', err);
-            }
-        }
-
-        // 2. WEB SHARE API (Modern Web Browsers & supported WebViews)
-        if (navigator.share) {
-            try {
-                const blob = new Blob([csvContent], { type: 'text/csv' });
-                const file = new File([blob], fileName, { type: 'text/csv' });
-
-                if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                    await navigator.share({
-                        files: [file],
-                        title: `${exam.subject} Exam`,
-                        text: `Exam: ${exam.subject} (${exam.class})`
-                    });
-                    showAlert('✅ Exam shared successfully!', 'success');
-                    return;
-                }
-            } catch (err) {
-                if (err.name !== 'AbortError') console.warn('Web Share failed', err);
-            }
-        }
-
-        // 3. FALLBACK FOR MOBILE WEBVIEW / DESKTOP (Triggers browser download)
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.setAttribute("href", url);
-        link.setAttribute("download", fileName);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-
-        showAlert('✅ Exam exported & downloaded successfully!', 'success', 3000);
+        const csvContent = jsonToCsv(exam);
+        const safeSubject = exam.subject.replace(/[^a-z0-9]/gi, '_');
+        const safeClass = String(exam.class).replace(/[^a-z0-9]/gi, '_');
+        const fileName = `${safeSubject}_${safeClass}_Exam.csv`;
+        await downloadOrShareCSV(csvContent, fileName, `${exam.subject} Exam`);
 
     } catch (error) {
         console.error('❌ Export error:', error);

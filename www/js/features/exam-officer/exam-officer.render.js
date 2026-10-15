@@ -475,7 +475,7 @@ function renderExamOfficeUploadPage(state) {
                             <i data-lucide="info" class="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5"></i>
                             <div>
                                 <h3 class="font-semibold text-blue-800">How It Works</h3>
-                                <p class="text-sm text-blue-700 mt-1">Upload one or more CSV exam files. The file format must match the standard CSV export format (exam_id, subject, class, duration, questions_json). You can upload files for multiple classes at once.</p>
+                                <p class="text-sm text-blue-700 mt-1">Upload one or more CSV exam files, including files exported from this app. CSV columns are matched by header, and files for multiple classes can be uploaded together.</p>
                             </div>
                         </div>
                     </div>
@@ -487,9 +487,9 @@ function renderExamOfficeUploadPage(state) {
                             Upload Exam Files
                         </h2>
 
-                        <div id="upload-zone" class="upload-zone" onclick="document.getElementById('exam-file-input').click()" ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
-                            <input type="file" id="exam-file-input" multiple accept=".csv,text/csv" onchange="handleExamOfficeFileSelect(event)" style="display:none;">
-                            <div id="upload-content">
+                        <div id="upload-zone" class="upload-zone" ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
+                            <input type="file" id="exam-file-input" multiple accept=".csv,text/csv,application/csv,text/comma-separated-values,application/vnd.ms-excel" onchange="handleExamOfficeFileSelect(event)" style="display:none;">
+                            <div id="upload-content" onclick="document.getElementById('exam-file-input').click()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();document.getElementById('exam-file-input').click();}" role="button" tabindex="0">
                                 <i data-lucide="upload-cloud" class="w-16 h-16 text-purple-400 mx-auto mb-4"></i>
                                 <p class="text-lg font-semibold text-gray-700 mb-2">Drag & Drop CSV files here</p>
                                 <p class="text-sm text-gray-500 mb-4">or click to browse your files</p>
