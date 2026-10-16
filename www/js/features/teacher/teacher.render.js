@@ -3,8 +3,10 @@
 
 function renderTeacherRegistrationPage() {
     return `
-        <div class="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-            <div class="bg-white rounded-xl shadow-xl p-6 md:p-8 w-full max-w-md animate-fadeIn">
+        <div class="min-h-screen bg-gray-50 flex items-center justify-center p-4 relative">
+            ${renderAuthBackground()}
+
+            <div class="relative z-10 bg-white/95 backdrop-blur-sm rounded-xl shadow-xl p-6 md:p-8 w-full max-w-md animate-fadeIn">
                 <div class="text-center mb-6">
                     <div class="w-16 h-16 rounded-full bg-green-600 mx-auto mb-4 flex items-center justify-center">
                         <i data-lucide="user-plus" class="w-8 h-8 text-white"></i>
@@ -41,8 +43,10 @@ function renderTeacherRegistrationPage() {
 
 function renderTeacherLoginPage() {
     return `
-        <div class="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-            <div class="bg-white rounded-xl shadow-xl p-6 md:p-8 w-full max-w-md animate-fadeIn">
+        <div class="min-h-screen bg-gray-50 flex items-center justify-center p-4 relative">
+            ${renderAuthBackground()}
+
+            <div class="relative z-10 bg-white/95 backdrop-blur-sm rounded-xl shadow-xl p-6 md:p-8 w-full max-w-md animate-fadeIn">
                 <div class="text-center mb-6">
                     <div class="w-16 h-16 rounded-full bg-blue-600 mx-auto mb-4 flex items-center justify-center">
                         <i data-lucide="graduation-cap" class="w-8 h-8 text-white"></i>
@@ -74,6 +78,7 @@ function renderTeacherLoginPage() {
         </div>
     `;
 }
+
 
 function renderTeacherDashboard(state) {
     const userName = state.user ? state.user.name : 'User';

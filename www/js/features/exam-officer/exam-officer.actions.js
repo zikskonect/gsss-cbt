@@ -13,7 +13,6 @@ function handleDragLeave(event) {
     event.currentTarget.classList.remove('drag-over');
 }
 
-
 function handleDrop(event) {
     event.preventDefault();
     event.currentTarget.classList.remove('drag-over');

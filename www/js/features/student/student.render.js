@@ -2,12 +2,13 @@
 // Renders student pages (info form, exam list, exam interface, results)
 
 function renderStudentInfoForm(state) {
-    // Always use fresh empty values to prevent disabled state issues
     const studentInfo = { name: '', class: '', arms: '' };
-    
+
     return `
-        <div class="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-            <div class="bg-white rounded-xl shadow-xl p-6 md:p-8 w-full max-w-md animate-fadeIn">
+        <div class="min-h-screen bg-gray-50 flex items-center justify-center p-4 relative">
+            ${renderAuthBackground()}
+
+            <div class="relative z-10 bg-white/95 backdrop-blur-sm rounded-xl shadow-xl p-6 md:p-8 w-full max-w-md animate-fadeIn">
                 <div class="text-center mb-6">
                     <div class="w-16 h-16 rounded-full bg-[#B80236] mx-auto mb-4 flex items-center justify-center">
                         <i data-lucide="user-check" class="w-8 h-8 text-white"></i>
@@ -32,9 +33,9 @@ function renderStudentInfoForm(state) {
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm md:text-base focus:ring-2 focus:ring-[#B80236] focus:border-transparent" 
                                 required>
                             <option value="">Select Class</option>
-                            <option value="SS 1" ${studentInfo.class === 'SS 1' ? 'selected' : ''}>SS 1</option>
-                            <option value="SS 2" ${studentInfo.class === 'SS 2' ? 'selected' : ''}>SS 2</option>
-                            <option value="SS 3" ${studentInfo.class === 'SS 3' ? 'selected' : ''}>SS 3</option>
+                            <option value="SS 1">SS 1</option>
+                            <option value="SS 2">SS 2</option>
+                            <option value="SS 3">SS 3</option>
                         </select>
                     </div>
                     <div>
@@ -43,14 +44,14 @@ function renderStudentInfoForm(state) {
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm md:text-base focus:ring-2 focus:ring-[#B80236] focus:border-transparent" 
                                 required>
                             <option value="">Select Arms</option>
-                            <option value="A" ${studentInfo.arms === 'A' ? 'selected' : ''}>A</option>
-                            <option value="B" ${studentInfo.arms === 'B' ? 'selected' : ''}>B</option>
-                            <option value="C" ${studentInfo.arms === 'C' ? 'selected' : ''}>C</option>
-                            <option value="D" ${studentInfo.arms === 'D' ? 'selected' : ''}>D</option>
-                            <option value="E" ${studentInfo.arms === 'E' ? 'selected' : ''}>E</option>
-                            <option value="F" ${studentInfo.arms === 'F' ? 'selected' : ''}>F</option>                            
-                            <option value="G" ${studentInfo.arms === 'G' ? 'selected' : ''}>G</option>
-                            <option value="H" ${studentInfo.arms === 'H' ? 'selected' : ''}>H</option>
+                            <option value="A">A</option>
+                            <option value="B">B</option>
+                            <option value="C">C</option>
+                            <option value="D">D</option>
+                            <option value="E">E</option>
+                            <option value="F">F</option>
+                            <option value="G">G</option>
+                            <option value="H">H</option>
                         </select>
                     </div>
                     <button type="submit" 
