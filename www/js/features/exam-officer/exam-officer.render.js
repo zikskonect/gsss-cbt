@@ -588,12 +588,12 @@ function renderExamOfficeSchedulePage(state) {
 
     const today = new Date().toISOString().split('T')[0];
 
-    // Class cards HTML with scheduling
+    // Class cards HTML with scheduling and checkboxes
     const classCardsHtml = Object.keys(examsByClass).length > 0
         ? Object.entries(examsByClass).map(([cls, exams]) => {
             return `
-                <div class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all overflow-hidden border-t-4 border-purple-600">
-                    <div class="p-5">
+                <div class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all overflow-hidden border-t-4 border-purple-600 flex flex-col">
+                    <div class="p-5 flex-1">
                         <div class="flex items-center justify-between mb-4">
                             <div class="flex items-center gap-3">
                                 <div class="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-700 rounded-lg flex items-center justify-center">
@@ -605,12 +605,12 @@ function renderExamOfficeSchedulePage(state) {
                         </div>
 
                         <button onclick="openClassScheduleModal('${cls.replace(/'/g, "\\'")}')"
-                                class="w-full bg-purple-600 hover:bg-purple-700 text-white py-2.5 rounded-lg font-semibold text-sm transition-colors flex items-center justify-center gap-2">
+                                class="w-full bg-purple-600 hover:bg-purple-700 text-white py-2.5 rounded-lg font-semibold text-sm transition-colors flex items-center justify-center gap-2 mb-4">
                             <i data-lucide="calendar-plus" class="w-4 h-4"></i>
                             Schedule All for ${cls}
                         </button>
 
-                        <div class="mt-3 space-y-2 max-h-48 overflow-y-auto">
+                        <div class="space-y-2 max-h-72 overflow-y-auto">
                             ${exams.map(exam => {
                                 const isScheduled = exam.scheduledDate;
                                 const scheduledDate = isScheduled ? new Date(exam.scheduledDate).toLocaleDateString() : 'Not scheduled';
@@ -622,17 +622,28 @@ function renderExamOfficeSchedulePage(state) {
                                 else if (statusLabel === 'closed') statusColor = 'text-red-600';
 
                                 return `
-                                    <div class="flex items-center justify-between p-2.5 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                                        <div class="flex-1 min-w-0">
-                                            <p class="text-sm font-medium text-gray-800 truncate">${exam.subject}</p>
-                                            <p class="text-xs text-gray-500">${isScheduled ? '📅 ' + scheduledDate : '⏳ Not scheduled'}</p>
+                                    <div class="schedule-exam-item flex items-center justify-between p-2.5 bg-gray-50 rounded-lg hover:bg-gray-100 transition-all border border-transparent">
+                                        <div class="flex items-center gap-2 flex-1 min-w-0">
+                                            <input type="checkbox" 
+                                                class="w-5 h-5 text-purple-600 rounded focus:ring-purple-500 cursor-pointer schedule-checkbox"
+                                                data-exam-id="${exam.exam_id}"
+                                                onchange="handleScheduleCheckboxChange(this)">
+                                            <div class="min-w-0 flex-1">
+                                                <p class="text-sm font-medium text-gray-800 truncate">${exam.subject}</p>
+                                                <p class="text-xs text-gray-500">${isScheduled ? '📅 ' + scheduledDate : '⏳ Not scheduled'}</p>
+                                            </div>
                                         </div>
-                                        <div class="flex items-center gap-2 flex-shrink-0">
-                                            <span class="text-xs font-semibold ${statusColor}">${statusLabel.charAt(0).toUpperCase() + statusLabel.slice(1)}</span>
+                                        <div class="flex items-center gap-1 flex-shrink-0">
+                                            <span class="text-xs font-semibold ${statusColor} mr-1">${statusLabel.charAt(0).toUpperCase() + statusLabel.slice(1)}</span>
                                             <button onclick="openExamScheduleModal('${exam.exam_id}')"
                                                     class="p-1.5 text-purple-600 hover:bg-purple-100 rounded-lg transition-colors"
                                                     title="Schedule this exam">
                                                 <i data-lucide="calendar" class="w-4 h-4"></i>
+                                            </button>
+                                            <button onclick="deleteExamFromExamOffice('${exam.exam_id}', '${exam.subject.replace(/'/g, "\\'")}')"
+                                                    class="p-1.5 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+                                                    title="Delete this exam">
+                                                <i data-lucide="trash-2" class="w-4 h-4"></i>
                                             </button>
                                         </div>
                                     </div>
@@ -686,7 +697,7 @@ function renderExamOfficeSchedulePage(state) {
                 </div>
             </aside>
 
-            <div class="flex-1 flex flex-col overflow-hidden w-full">
+            <div class="flex-1 flex flex-col overflow-hidden w-full relative">
                 <header class="bg-white shadow-sm border-b border-gray-200">
                     <div class="flex items-center justify-between px-4 md:px-6 py-3 md:py-4">
                         <div class="flex items-center gap-3">
@@ -700,7 +711,7 @@ function renderExamOfficeSchedulePage(state) {
                             </button>
                             <div>
                                 <h2 class="text-lg md:text-2xl font-bold text-gray-800">Schedule Exams</h2>
-                                <p class="text-xs md:text-sm text-gray-500 hidden sm:block">Set dates for exams and export packages</p>
+                                <p class="text-xs md:text-sm text-gray-500 hidden sm:block">Select multiple exams to schedule them together</p>
                             </div>
                         </div>
                         <div class="flex gap-2">
@@ -714,8 +725,32 @@ function renderExamOfficeSchedulePage(state) {
                     </div>
                 </header>
 
-                <main class="flex-1 overflow-y-auto p-4 md:p-6">
+                <!-- Bulk Schedule Toolbar (Appears when exams are checked) -->
+                                <!-- Bulk Action Toolbar (Appears when exams are checked) -->
+                <div id="bulk-schedule-toolbar" class="hidden absolute top-20 left-1/2 transform -translate-x-1/2 z-40 bg-white border border-gray-200 text-gray-800 px-4 py-2.5 rounded-xl shadow-2xl items-center gap-4 animate-fadeIn">
+                    
+                    <!-- Count Badge -->
+                    <div class="flex items-center gap-2 pr-3 border-r border-gray-200">
+                        <span id="bulk-schedule-count" class="text-sm font-bold text-gray-700 whitespace-nowrap">0 selected</span>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="flex items-center gap-2">
+                        <button onclick="openBulkScheduleModal()" 
+                                class="bg-purple-50 text-purple-700 hover:bg-purple-100 px-3 py-1.5 rounded-lg text-sm font-bold transition-colors flex items-center gap-1.5 border border-purple-200">
+                            <i data-lucide="calendar" class="w-4 h-4"></i> 
+                            Schedule
+                        </button>
+                        
+                        <button onclick="deleteSelectedExamsFromExamOffice()" 
+                                class="bg-red-50 text-red-600 hover:bg-red-100 px-3 py-1.5 rounded-lg text-sm font-bold transition-colors flex items-center gap-1.5 border border-red-200">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i> 
+                            Delete
+                        </button>
+                    </div>
+                </div>
 
+                <main class="flex-1 overflow-y-auto p-4 md:p-6">
                     ${caExams.length > 0 ? `
                         <div class="bg-blue-50 border border-blue-200 rounded-xl p-3 md:p-4 mb-4 flex items-start gap-3">
                             <i data-lucide="info" class="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5"></i>
@@ -735,6 +770,7 @@ function renderExamOfficeSchedulePage(state) {
 
         <!-- Individual Exam Schedule Modal -->
         <div id="examScheduleModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+            <!-- ... (Keep your existing individual exam schedule modal HTML here) ... -->
             <div class="bg-white rounded-xl shadow-xl w-full max-w-md">
                 <div class="flex justify-between items-center p-6 border-b">
                     <h3 id="examScheduleModalTitle" class="text-xl font-bold text-gray-800">Schedule Exam</h3>
@@ -765,7 +801,8 @@ function renderExamOfficeSchedulePage(state) {
 
         <!-- Class Schedule Modal -->
         <div id="classScheduleModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-            <div class="bg-white rounded-xl shadow-xl w-full max-w-md">
+            <!-- ... (Keep your existing class schedule modal HTML here) ... -->
+             <div class="bg-white rounded-xl shadow-xl w-full max-w-md">
                 <div class="flex justify-between items-center p-6 border-b">
                     <h3 id="classScheduleModalTitle" class="text-xl font-bold text-gray-800">Schedule All</h3>
                     <button onclick="closeClassScheduleModal()" class="text-gray-400 hover:text-gray-600"><i data-lucide="x" class="w-6 h-6"></i></button>
@@ -786,6 +823,35 @@ function renderExamOfficeSchedulePage(state) {
                             <button type="submit" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2">
                                 <i data-lucide="calendar-check" class="w-4 h-4"></i>
                                 Schedule All
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bulk Schedule Modal -->
+        <div id="bulkScheduleModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+            <div class="bg-white rounded-xl shadow-xl w-full max-w-md">
+                <div class="flex justify-between items-center p-6 border-b">
+                    <h3 id="bulkScheduleModalTitle" class="text-xl font-bold text-gray-800">Schedule Exams</h3>
+                    <button onclick="closeBulkScheduleModal()" class="text-gray-400 hover:text-gray-600"><i data-lucide="x" class="w-6 h-6"></i></button>
+                </div>
+                <div class="p-6">
+                    <p class="text-sm text-gray-600 mb-4">Select one date for all selected examinations.</p>
+                    <form onsubmit="saveBulkSchedule(event)">
+                        <div class="mb-4">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Schedule Date</label>
+                            <input type="date" id="bulk-schedule-date-picker"
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                   min="${today}"
+                                   required />
+                        </div>
+                        <div class="flex justify-end gap-3">
+                            <button type="button" onclick="closeBulkScheduleModal()" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors">Cancel</button>
+                            <button type="submit" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2">
+                                <i data-lucide="calendar-check" class="w-4 h-4"></i>
+                                Schedule Selected
                             </button>
                         </div>
                     </form>

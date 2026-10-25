@@ -13,6 +13,7 @@ function handleDragLeave(event) {
     event.currentTarget.classList.remove('drag-over');
 }
 
+
 function handleDrop(event) {
     event.preventDefault();
     event.currentTarget.classList.remove('drag-over');
@@ -157,42 +158,60 @@ async function processExamUpload() {
             showAlert(`📖 Processing ${i + 1}/${pendingUploadFiles.length}: ${file.name}...`, 'info', 3000);
 
             const content = await readFileAsText(file);
-            let exam = parseCSVWithBetterHandling(content);
+            
+            // ─── SMART DETECTION ───
+            // Check if the file has multiple rows (Package file) or is a single exam
+            const lineCount = content.split('\n').filter(l => l.trim().length > 0).length;
+            let examsToSave = [];
 
-            exam = normalizeExamData(exam);
-            const validationError = validateExamStructure(exam);
-
-            if (validationError) {
-                throw new Error(`Validation failed: ${validationError.substring(0, 100)}`);
+            if (lineCount > 2) {
+                // It's a multi-row package file!
+                console.log(`📦 Detected multi-exam package (${lineCount} rows)`);
+                examsToSave = parsePackageCSV(content);
+            } else {
+                // It's a single exam file
+                console.log(`📄 Detected single-exam file`);
+                const singleExam = parseCSVWithBetterHandling(content);
+                examsToSave = [singleExam];
             }
 
-            totalQuestionsUploaded += exam.questions?.length || 0;
+            // Loop through whatever exams we found in this file
+            for (const rawExam of examsToSave) {
+                let exam = normalizeExamData(rawExam);
+                const validationError = validateExamStructure(exam);
 
-            const existing = state.availableExams.find(e => e.exam_id === exam.exam_id);
-            if (existing) {
-                const replace = confirm(
-                    `⚠️ Exam "${exam.exam_id}" already exists!\n\n` +
-                    `Subject: ${existing.subject}\n` +
-                    `Current: ${existing.questions.length} questions\n` +
-                    `New: ${exam.questions.length} questions\n\n` +
-                    `Replace existing exam?`
-                );
-
-                if (!replace) {
-                    skipped++;
-                    continue;
+                if (validationError) {
+                    throw new Error(`Validation failed: ${validationError.substring(0, 100)}`);
                 }
 
-                await deleteExamFromDB(exam.exam_id);
+                totalQuestionsUploaded += exam.questions?.length || 0;
+
+                const existing = state.availableExams.find(e => e.exam_id === exam.exam_id);
+                if (existing) {
+                    const replace = confirm(
+                        `⚠️ Exam "${exam.exam_id}" already exists!\n\n` +
+                        `Subject: ${existing.subject}\n` +
+                        `Current: ${existing.questions.length} questions\n` +
+                        `New: ${exam.questions.length} questions\n\n` +
+                        `Replace existing exam?`
+                    );
+
+                    if (!replace) {
+                        skipped++;
+                        continue;
+                    }
+
+                    await deleteExamFromDB(exam.exam_id);
+                }
+
+                exam.created_by = state.user?.phone_number || state.user?.name || 'exam_office';
+                exam.created_date = new Date().toISOString().split('T')[0];
+
+                await saveExamToDB(exam);
+                successful++;
             }
-
-            exam.created_by = state.user?.phone_number || state.user?.name || 'exam_office';
-            exam.created_date = new Date().toISOString().split('T')[0];
-
-            await saveExamToDB(exam);
-
-            successful++;
-            showAlert(`✅ "${exam.subject}" uploaded successfully!`, 'success', 2000);
+            
+            showAlert(`✅ "${file.name}" processed successfully!`, 'success', 2000);
 
         } catch (error) {
             console.error(`❌ Upload failed for ${file.name}:`, error);
@@ -217,7 +236,7 @@ async function processExamUpload() {
     if (successful > 0) summary += `✅ ${successful} exam(s) uploaded successfully\n`;
     if (skipped > 0) summary += `⏭️ ${skipped} exam(s) skipped (already exist)\n`;
     if (failed > 0) {
-        summary += `❌ ${failed} exam(s) failed:\n`;
+        summary += `❌ ${failed} file(s) failed to process:\n`;
         failedDetails.forEach(d => summary += `   • ${d}\n`);
     }
 
@@ -257,7 +276,7 @@ async function importMultipleExams(files) {
         skipped: []
     };
     
-    showAlert(`📚 Importing ${files.length} exam(s)...`, 'info', 3000);
+    showAlert(`📚 Importing ${files.length} file(s)...`, 'info', 3000);
     
     for (let i = 0; i < files.length; i++) {
         const file = files[i];
@@ -267,41 +286,54 @@ async function importMultipleExams(files) {
             showAlert(`📖 Importing ${i + 1}/${files.length}: ${file.name}...`, 'info', 2000);
             
             const content = await readFileAsText(file);
-            let exam = parseCSVWithBetterHandling(content);
             
-            if (!exam.questions || exam.questions.length === 0) {
-                throw new Error('No questions found in file');
+            // SMART DETECTION: Handle both single exams and multi-exam packages
+            const lineCount = content.split('\n').filter(l => l.trim().length > 0).length;
+            let examsToSave = [];
+
+            if (lineCount > 2) {
+                console.log(`📦 Detected multi-exam package (${lineCount} rows)`);
+                examsToSave = parsePackageCSV(content);
+            } else {
+                console.log(`📄 Detected single-exam file`);
+                const singleExam = parseCSVWithBetterHandling(content);
+                examsToSave = [singleExam];
             }
-            
-            exam = normalizeExamData(exam);
-            const validationError = validateExamStructure(exam);
-            if (validationError) {
-                throw new Error(`Validation failed: ${validationError.substring(0, 100)}...`);
-            }
-            
-            const existing = state.availableExams.find(e => e.exam_id === exam.exam_id);
-            if (existing) {
-                results.skipped.push({
+
+            // Loop through and save each exam found in this file
+            for (const rawExam of examsToSave) {
+                let exam = normalizeExamData(rawExam);
+                const validationError = validateExamStructure(exam);
+                
+                if (validationError) {
+                    throw new Error(`Validation failed: ${validationError.substring(0, 100)}...`);
+                }
+                
+                const existing = state.availableExams.find(e => e.exam_id === exam.exam_id);
+                if (existing) {
+                    // If it already exists, skip it during batch imports to be safe
+                    results.skipped.push({
+                        file: file.name,
+                        examId: exam.exam_id,
+                        reason: 'Already exists (skipped)'
+                    });
+                    continue;
+                }
+                
+                exam.created_by = state.user?.phone_number || 'teacher';
+                exam.created_date = new Date().toISOString().split('T')[0];
+                
+                await saveExamToDB(exam);
+                
+                results.successful.push({
                     file: file.name,
                     examId: exam.exam_id,
-                    reason: 'Already exists'
+                    subject: exam.subject,
+                    questionCount: exam.questions.length
                 });
-                continue;
+                
+                console.log(`✅ Successfully imported: ${exam.exam_id}`);
             }
-            
-            exam.created_by = state.user?.phone_number || 'teacher';
-            exam.created_date = new Date().toISOString().split('T')[0];
-            
-            await saveExamToDB(exam);
-            
-            results.successful.push({
-                file: file.name,
-                examId: exam.exam_id,
-                subject: exam.subject,
-                questionCount: exam.questions.length
-            });
-            
-            console.log(`✅ Successfully imported: ${exam.exam_id}`);
             
         } catch (error) {
             console.error(`❌ Failed to import ${file.name}:`, error);
@@ -317,7 +349,7 @@ async function importMultipleExams(files) {
     await loadExams();
     showImportResults(results);
     
-    if (state.currentPage === 'teacher') {
+    if (state.currentPage === 'teacher' || state.currentPage === 'exam-office-upload') {
         render();
     }
 }
@@ -503,85 +535,73 @@ async function exportMultipleExams(examIds) {
 
 async function shareMultipleFiles(filesToShare, results) {
     const totalFiles = filesToShare.length;
-    let shared = false;
-    let shareCancelled = false;
+    
+    // Check if it's a desktop browser (no touch, large screen)
+    const isDesktop = !('ontouchstart' in window) && navigator.maxTouchPoints === 0;
 
-    if (window.Capacitor && window.Capacitor.Plugins) {
-        const Filesystem = window.Capacitor.Plugins.Filesystem;
-        const Share = window.Capacitor.Plugins.Share;
-        if (Filesystem && Share) {
-            try {
-                const fileUris = [];
-                for (const fileData of filesToShare) {
-                    const result = await Filesystem.writeFile({
-                        path: fileData.fileName,
-                        data: await fileData.blob.text(),
-                        directory: Filesystem.Directory?.Cache || 'CACHE',
-                        encoding: Filesystem.Encoding?.UTF8 || 'utf8'
-                    });
-                    fileUris.push(result.uri);
-                }
-                await Share.share({
-                    title: `${totalFiles} Exam Files`,
-                    text: `Sharing ${totalFiles} exam(s)`,
-                    files: fileUris
+    if (isDesktop) {
+        // Desktop fallback: just download all files
+        console.log('💻 Desktop detected. Downloading files...');
+        for (let i = 0; i < filesToShare.length; i++) {
+            downloadCSVFallback(filesToShare[i].blob, filesToShare[i].fileName, true);
+            await new Promise(resolve => setTimeout(resolve, 300));
+        }
+        showAlert(`✅ ${totalFiles} exam(s) downloaded!\n\n📂 Check your Downloads folder.`, 'success', 6000);
+        return;
+    }
+
+    // Mobile: Try Capacitor share
+    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Share) {
+        try {
+            const { Filesystem, Share } = window.Capacitor.Plugins;
+            const fileUris = [];
+            
+            for (const fileData of filesToShare) {
+                const result = await Filesystem.writeFile({
+                    path: fileData.fileName,
+                    data: await fileData.blob.text(),
+                    directory: Filesystem.Directory?.Cache || 'CACHE',
+                    encoding: Filesystem.Encoding?.UTF8 || 'utf8'
                 });
-                shared = true;
-            } catch (error) {
-                if (error.name === 'AbortError') {
-                    shareCancelled = true;
-                } else {
-                    console.error('❌ Native sharing failed:', error);
-                }
+                fileUris.push(result.uri);
             }
+
+            await Share.share({
+                title: `${totalFiles} Exam Files`,
+                text: `Sharing ${totalFiles} exam(s)`,
+                files: fileUris
+            });
+            showAlert(`✅ ${totalFiles} exam(s) shared successfully!`, 'success', 3000);
+            return;
+        } catch (err) {
+            console.error('Capacitor share error:', err);
         }
     }
 
-    if (!shared && !shareCancelled && navigator.share && navigator.canShare) {
+    // Mobile: Try Web Share API
+    if (navigator.share && navigator.canShare) {
         try {
-            const files = await Promise.all(
-                filesToShare.map(fileData =>
-                    Promise.resolve(new File([fileData.blob], fileData.fileName, { type: 'text/csv' }))
-                )
-            );
-
+            const files = filesToShare.map(f => new File([f.blob], f.fileName, { type: 'text/csv' }));
             if (navigator.canShare({ files })) {
                 await navigator.share({
                     files,
                     title: `${totalFiles} Exam Files`,
                     text: `Sharing ${totalFiles} exam(s)`
                 });
-                shared = true;
+                showAlert(`✅ ${totalFiles} exam(s) shared successfully!`, 'success', 3000);
+                return;
             }
-        } catch (error) {
-            if (error.name === 'AbortError') {
-                shareCancelled = true;
-            } else {
-                console.error('❌ Web sharing failed:', error);
-            }
+        } catch (err) {
+            if (err.name !== 'AbortError') console.warn('Web Share failed', err);
         }
     }
 
-    let downloaded = 0;
-    for (const fileData of filesToShare) {
-        try {
-            downloadCSVFallback(fileData.blob, fileData.fileName, true);
-            downloaded++;
-            await new Promise(resolve => setTimeout(resolve, 300));
-        } catch (error) {
-            console.error(`❌ Failed to download ${fileData.fileName}:`, error);
-        }
+    // Final fallback: download all
+    for (let i = 0; i < filesToShare.length; i++) {
+        downloadCSVFallback(filesToShare[i].blob, filesToShare[i].fileName, true);
+        await new Promise(resolve => setTimeout(resolve, 300));
     }
-
-    if (downloaded !== totalFiles) {
-        showAlert(`⚠️ ${downloaded}/${totalFiles} exam file(s) downloaded${shared ? ' and shared' : ''}. Check the console for download errors.`, 'error', 6000);
-    } else if (shared) {
-        showAlert(`✅ ${totalFiles} exam file(s) downloaded and shared successfully.`, 'success', 5000);
-    } else if (shareCancelled) {
-        showAlert(`📥 ${totalFiles} exam file(s) downloaded. Sharing was cancelled.`, 'info', 5000);
-    } else {
-        showAlert(`📥 ${totalFiles} exam file(s) downloaded. Sharing is not available on this device.`, 'info', 6000);
-    }
+    showAlert(`✅ ${totalFiles} exam(s) downloaded!\n\n📂 Check your Downloads folder.`, 'success', 6000);
 }
 
 // Helper: escape double quotes in a CSV field value
@@ -1200,69 +1220,11 @@ function jsonToCsvWithDate(exam) {
  * Download or share a CSV file — Capacitor native share first, then Web Share, then download
  */
 async function downloadOrShareCSV(csvContent, fileName, title) {
+    // Exam Office: Always download directly to device storage
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    let shared = false;
-    let shareCancelled = false;
-
-    if (window.Capacitor && window.Capacitor.Plugins) {
-        const Plugins = window.Capacitor.Plugins;
-        const Filesystem = Plugins.Filesystem;
-        const Share = Plugins.Share;
-
-        if (Filesystem && Share) {
-            try {
-                console.log('📱 Using Capacitor native share');
-                const result = await Filesystem.writeFile({
-                    path: fileName,
-                    data: csvContent,
-                    directory: Filesystem.Directory?.Cache || 'CACHE',
-                    encoding: Filesystem.Encoding?.UTF8 || 'utf8'
-                });
-
-                await Share.share({
-                    title: title,
-                    text: title,
-                    files: [result.uri]
-                });
-                shared = true;
-            } catch (err) {
-                if (err.name === 'AbortError') {
-                    shareCancelled = true;
-                } else {
-                    console.error('Capacitor share error:', err);
-                }
-            }
-        }
-    }
-
-    if (!shared && !shareCancelled && navigator.share && navigator.canShare) {
-        try {
-            const file = new File([blob], fileName, { type: 'text/csv' });
-            if (navigator.canShare({ files: [file] })) {
-                await navigator.share({
-                    files: [file],
-                    title: title,
-                    text: title
-                });
-                shared = true;
-            }
-        } catch (err) {
-            if (err.name !== 'AbortError') {
-                console.error('Web Share failed:', err);
-            } else {
-                shareCancelled = true;
-            }
-        }
-    }
-
-    downloadCSVFallback(blob, fileName, true);
-    if (shared) {
-        showAlert(`✅ "${fileName}" downloaded and shared successfully.`, 'success', 4000);
-    } else if (shareCancelled) {
-        showAlert(`📥 "${fileName}" downloaded. Sharing was cancelled.`, 'info', 4000);
-    } else {
-        showAlert(`📥 "${fileName}" downloaded. Sharing is not available on this device.`, 'info', 5000);
-    }
+    
+    // Call the helper function that triggers the download
+    downloadCSVFallback(blob, fileName, false); // 'false' shows the success alert
 }
 
 /**
@@ -1388,6 +1350,9 @@ async function exportAllExamsSingleFile() {
             const assessmentType = exam.assessmentType || 'EXAM';
             const scheduledDate = exam.scheduledDate || '';
             
+            // Correctly parse questions array to a JSON string and escape quotes for CSV
+            const questionsJson = JSON.stringify(exam.questions || []).replace(/"/g, '""');
+            
             if (assessmentType === 'CA') {
                 caCount++;
             } else {
@@ -1401,11 +1366,17 @@ async function exportAllExamsSingleFile() {
                 }
             }
             
-            rows.push(jsonToCsv({
-                ...exam,
-                assessmentType,
-                scheduledDate
-            }).split('\n').slice(1).join('\n'));
+            // Manually construct the row to ensure NO commas or newlines in the JSON break the CSV
+            const row = [
+                `"${escapeCsvField(exam.exam_id)}"`,
+                `"${escapeCsvField(exam.subject)}"`,
+                `"${escapeCsvField(exam.class)}"`,
+                `"${exam.duration || 30}"`,
+                `"${assessmentType}"`,
+                `"${scheduledDate}"`,
+                `"${questionsJson}"`
+            ];
+            rows.push(row.join(','));
         });
         
         const csvContent = rows.join('\n');
@@ -1416,31 +1387,6 @@ async function exportAllExamsSingleFile() {
         const fileName = `${schoolShortName}_AllExams_${today}.csv`;
         
         console.log(`📄 Package created: ${fileName} (${csvContent.length} bytes)`);
-        
-        // Save to archive BEFORE sharing
-        // try {
-        //     const archiveId = `archive_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
-        //     const archive = {
-        //         archive_id: archiveId,
-        //         filename: fileName,
-        //         exported_at: new Date().toISOString(),
-        //         exam_count: exams.length,
-        //         ca_count: caCount,
-        //         exam_count_scheduled: examCount,
-        //         csv_content: csvContent,
-        //         exams_summary: exams.map(e => ({
-        //             exam_id: e.exam_id,
-        //             subject: e.subject,
-        //             class: e.class,
-        //             assessment_type: e.assessmentType || 'EXAM',
-        //             scheduled_date: e.scheduledDate || null
-        //         }))
-        //     };
-        //     await saveArchiveToDB(archive);
-        //     console.log('✅ Archive saved:', archiveId);
-        // } catch (archiveErr) {
-        //     console.warn('⚠️ Could not save to archive (continuing with export):', archiveErr);
-        // }
         
         // Share/download
         await downloadOrShareCSV(csvContent, fileName, `${exams.length} Exams Package`);
@@ -1460,9 +1406,6 @@ async function exportAllExamsSingleFile() {
         }
         
         setTimeout(() => showAlert(summaryMsg, 'success', 8000), 1000);
-        
-        // ⏸️ Archive list refresh DISABLED — to be re-enabled in a later version
-        // await loadArchives();
         render();
         
     } catch (error) {
@@ -1505,7 +1448,8 @@ function parsePackageCSV(csvText) {
         duration: header.indexOf('duration'),
         assessment_type: header.indexOf('assessment_type'),
         scheduled_date: header.indexOf('scheduled_date'),
-        questions_json: header.indexOf('questions_json')
+        questions_json: header.indexOf('questions_json'),
+        created_by: header.indexOf('created_by')
     };
     
     // Validate header
@@ -1519,7 +1463,7 @@ function parsePackageCSV(csvText) {
         const cols = parseCSVLine(rows[i]);
         
         const examId = cols[colIndex.exam_id] || '';
-        if (!examId) continue; // Skip empty rows
+        if (!examId) continue;
         
         const questionsJson = cols[colIndex.questions_json] || '';
         let questions = [];
@@ -1538,6 +1482,7 @@ function parsePackageCSV(csvText) {
         
         const assessmentType = (cols[colIndex.assessment_type] || 'EXAM').toUpperCase().trim();
         const scheduledDate = cols[colIndex.scheduled_date] || '';
+        const createdBy = colIndex.created_by !== -1 ? (cols[colIndex.created_by] || '') : 'package_import';
         
         exams.push({
             exam_id: examId,
@@ -1548,7 +1493,7 @@ function parsePackageCSV(csvText) {
             scheduledDate: scheduledDate || null,
             questions: questions,
             created_date: new Date().toISOString().split('T')[0],
-            created_by: 'package_import'
+            created_by: createdBy
         });
     }
     
@@ -1857,7 +1802,148 @@ function handleImportArchive() {
     }
 }
 
-// Add to exports
+// ========================================
+// BULK SCHEDULE & DELETE (EXAM OFFICE)
+// ========================================
+
+let selectedScheduleExams = new Set();
+
+function handleScheduleCheckboxChange(checkbox) {
+    const examId = checkbox.dataset.examId;
+    const card = checkbox.closest('.schedule-exam-item');
+    
+    if (checkbox.checked) {
+        selectedScheduleExams.add(examId);
+        if (card) card.classList.add('ring-2', 'ring-purple-500', 'bg-purple-50');
+    } else {
+        selectedScheduleExams.delete(examId);
+        if (card) card.classList.remove('ring-2', 'ring-purple-500', 'bg-purple-50');
+    }
+    
+    updateBulkScheduleUI();
+}
+
+function updateBulkScheduleUI() {
+    const count = selectedScheduleExams.size;
+    const toolbar = document.getElementById('bulk-schedule-toolbar');
+    const countBadge = document.getElementById('bulk-schedule-count');
+    
+    if (toolbar) {
+        if (count > 0) {
+            toolbar.classList.remove('hidden');
+            toolbar.classList.add('flex');
+            if (countBadge) countBadge.textContent = `${count} exam(s) selected`;
+        } else {
+            toolbar.classList.add('hidden');
+            toolbar.classList.remove('flex');
+        }
+    }
+}
+
+function openBulkScheduleModal() {
+    if (selectedScheduleExams.size === 0) return;
+    
+    document.getElementById('bulkScheduleModalTitle').textContent = `Schedule ${selectedScheduleExams.size} Exam(s)`;
+    document.getElementById('bulk-schedule-date-picker').value = '';
+    document.getElementById('bulkScheduleModal').classList.remove('hidden');
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+function closeBulkScheduleModal() {
+    document.getElementById('bulkScheduleModal').classList.add('hidden');
+}
+
+async function saveBulkSchedule(event) {
+    event.preventDefault();
+    const date = document.getElementById('bulk-schedule-date-picker').value;
+    
+    if (!date) {
+        showAlert('Please select a date', 'error');
+        return;
+    }
+    
+    try {
+        let scheduledCount = 0;
+        
+        for (const examId of selectedScheduleExams) {
+            const exam = state.availableExams.find(e => e.exam_id === examId);
+            if (exam) {
+                exam.scheduledDate = date;
+                await saveExamToDB(exam);
+                scheduledCount++;
+            }
+        }
+        
+        await loadExams();
+        showAlert(`✅ ${scheduledCount} exam(s) scheduled for ${new Date(date).toLocaleDateString()}`, 'success');
+        
+        selectedScheduleExams.clear();
+        updateBulkScheduleUI();
+        closeBulkScheduleModal();
+        render(); // Refresh the page
+        
+    } catch (err) {
+        console.error('Bulk schedule error:', err);
+        showAlert('Failed to schedule exams', 'error');
+    }
+}
+
+async function deleteSelectedExamsFromExamOffice() {
+    if (selectedScheduleExams.size === 0) return;
+    
+    const count = selectedScheduleExams.size;
+    const examWord = count === 1 ? 'exam' : 'exams';
+    
+    if (!confirm(`⚠️ Are you sure you want to delete ${count} ${examWord}?\n\nThis will permanently remove them from the system. This action CANNOT be undone.`)) {
+        return;
+    }
+    
+    try {
+        let deleted = 0;
+        for (const examId of selectedScheduleExams) {
+            await deleteExamFromDB(examId);
+            // Remove from state
+            state.availableExams = state.availableExams.filter(e => e.exam_id !== examId);
+            deleted++;
+        }
+        
+        showAlert(`✅ Successfully deleted ${deleted} ${examWord}`, 'success', 3000);
+        
+        // Clear selection and update UI
+        selectedScheduleExams.clear();
+        updateBulkScheduleUI();
+        render();
+        
+    } catch (err) {
+        console.error('Bulk delete error:', err);
+        showAlert('Failed to delete exams', 'error');
+    }
+}
+
+async function deleteExamFromExamOffice(examId, examSubject) {
+    if (!confirm(`⚠️ Are you sure you want to delete "${examSubject}"?\n\nThis will remove the exam completely from the system.`)) {
+        return;
+    }
+    
+    try {
+        await deleteExamFromDB(examId);
+        state.availableExams = state.availableExams.filter(e => e.exam_id !== examId);
+        selectedScheduleExams.delete(examId);
+        
+        showAlert(`✅ "${examSubject}" deleted successfully`, 'success');
+        render();
+    } catch (err) {
+        console.error('Delete exam error:', err);
+        showAlert('Failed to delete exam', 'error');
+    }
+}
+
+// Add these to window exports at the bottom of the file:
+window.handleScheduleCheckboxChange = handleScheduleCheckboxChange;
+window.openBulkScheduleModal = openBulkScheduleModal;
+window.closeBulkScheduleModal = closeBulkScheduleModal;
+window.saveBulkSchedule = saveBulkSchedule;
+window.deleteExamFromExamOffice = deleteExamFromExamOffice;
 window.importArchiveFromFile = importArchiveFromFile;
 window.handleImportArchive = handleImportArchive;
 window.pendingUploadFiles = pendingUploadFiles;
@@ -1897,3 +1983,5 @@ window.loadArchives = loadArchives;
 window.downloadArchive = downloadArchive;
 window.deleteArchive = deleteArchive;
 window.toggleArchiveSection = toggleArchiveSection;
+
+window.deleteSelectedExamsFromExamOffice = deleteSelectedExamsFromExamOffice;
