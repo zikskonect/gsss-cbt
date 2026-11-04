@@ -1,7 +1,7 @@
 // app_config.js - Application Configuration (v2)
 
 const APP_CONFIG = {
-    appName: 'GSSS GWAGWALADA CBT',
+    appName: 'GSS GWAGWALADA CBT',
     version: '1.0.0',
 
     // Feature Flags
