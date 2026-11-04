@@ -46,3 +46,14 @@ Thumbs.db
 # IDE / Editor folders
 .vscode/
 .idea/
+
+# Capacitor Android / Native builds
+/android/app/build/
+/android/.gradle/
+
+# Local Database & Server Runtime
+server/public/cbt-server/runtime/
+server/public/cbt-server/runtime/mariadb/
+*.pid
+*.pdb
+ib_logfile*
