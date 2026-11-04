@@ -2,6 +2,6 @@
 <resources>
     <string name="app_name">GSS CBT</string>
     <string name="title_activity_main">GSS CBT</string>
-    <string name="package_name">com.gssscbt.app</string>
-    <string name="custom_url_scheme">com.gssscbt.app</string>
+    <string name="package_name">com.gsscbt.app</string>
+    <string name="custom_url_scheme">com.gsscbt.app</string>
 </resources>
