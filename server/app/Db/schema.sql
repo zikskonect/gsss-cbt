@@ -1,6 +1,6 @@
 -- server/app/db/schema.sql
 -- ═══════════════════════════════════════════════════════════
---  GSSS CBT — Central Database Schema
+--  GSS CBT — Central Database Schema
 --  MySQL 5.7+ / MariaDB 10.3+ — utf8mb4
 -- ═══════════════════════════════════════════════════════════
 

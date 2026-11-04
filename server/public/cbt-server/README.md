@@ -44,4 +44,4 @@
    ```
 
 7. **Backup**
-   Click 💾 Backup Database -> saves to %APPDATA%\GSSS-CBT\backups\
+   Click 💾 Backup Database -> saves to %APPDATA%\GSS-CBT\backups\

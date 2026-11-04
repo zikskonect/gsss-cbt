@@ -150,7 +150,7 @@ $loop->addPeriodicTimer(1.0, function () use ($presence) {
 // ─── Startup banner ──────────────────────────────────────────────────────
 $ip = gethostbyname(gethostname() ?: 'localhost');
 echo "╔════════════════════════════════════════════════════╗\n";
-echo "║  GSSS CBT — WebSocket Presence Server (FIXED)    ║\n";
+echo "║  GSS CBT — WebSocket Presence Server (FIXED)    ║\n";
 echo "╚════════════════════════════════════════════════════╝\n";
 echo "  Listening:      ws://$host:$port\n";
 echo "  LAN clients:    ws://$ip:$port\n";

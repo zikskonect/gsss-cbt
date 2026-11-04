@@ -18,7 +18,7 @@ return [
 
     // ─── Application ──────────────────────────────────
     'app' => [
-        'name'         => 'GSSS CBT Central Server',
+        'name'         => 'GSS CBT Central Server',
         'school_code'  => 'GSS',          // matches sch_config.js schoolCode
         'env'          => 'production',   // production | development
         'debug'        => false,

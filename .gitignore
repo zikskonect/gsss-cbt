@@ -18,7 +18,7 @@ BRIX-APP/
 *.brix
 
 # Nitron (old mobile build)
-gsss-cbt/
+gss-cbt/
 
 # OS junk
 .DS_Store

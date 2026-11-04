@@ -63,7 +63,7 @@ return [
         'charset'  => 'utf8mb4',
     ],
     'app' => [
-        'name'         => 'GSSS CBT Central Server',
+        'name'         => 'GSS CBT Central Server',
         'school_code'  => 'GSS',
         'env'          => 'production',
         'debug'        => false,
@@ -92,7 +92,7 @@ return [
 
 function getDataDir() {
     const home = os.homedir();
-    return process.platform==='win32' ? path.join(process.env.APPDATA,'GSSS-CBT') : path.join(home,'.gsss-cbt');
+    return process.platform==='win32' ? path.join(process.env.APPDATA,'GSS-CBT') : path.join(home,'.gss-cbt');
 }
 
 async function backupDatabase() {

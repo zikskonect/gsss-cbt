@@ -233,7 +233,7 @@ function renderTeacherSidebar(state, activePage = 'dashboard') {
                         <i data-lucide="graduation-cap" class="w-6 h-6"></i>
                     </div>
                     <div>
-                        <h1 class="text-lg font-bold">${window.SCHOOL_CONFIG?.schoolShortName || 'GSSS'} T/M CBT</h1>
+                        <h1 class="text-lg font-bold">${window.SCHOOL_CONFIG?.schoolShortName || 'GSS'} T/M CBT</h1>
                         <p class="text-[10px] text-gray-300 uppercase tracking-widest">Teacher Portal</p>
                     </div>
                 </div>

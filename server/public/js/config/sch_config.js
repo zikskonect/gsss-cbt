@@ -18,7 +18,7 @@ const SCHOOL_CONFIG = {
     academicYear: '2025/2026',
 
     // ─── Logo ────────────────────────────────────────────
-    logoPath: 'js/icons/128x128.png',
+    logoPath: 'js/sch_logo.png',
     logoAlt: 'GSS Logo',
 
     // ─── Contact ─────────────────────────────────────────

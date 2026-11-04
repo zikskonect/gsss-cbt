@@ -18,7 +18,7 @@ function renderExamOfficeRegisterPage() {
                 <form id="exam-office-registration-form" onsubmit="handleExamOfficeRegistration(event)" class="space-y-4">
                     <div>
                         <label for="exam-office-school-name" class="block text-sm font-semibold text-gray-700 mb-2">School Name</label>
-                        <input type="text" id="exam-office-school-name" class="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm md:text-base" placeholder="e.g., GSSS International" required />
+                        <input type="text" id="exam-office-school-name" class="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm md:text-base" placeholder="e.g., GSS International" required />
                     </div>
                     <div>
                         <label for="exam-office-admin-name" class="block text-sm font-semibold text-gray-700 mb-2">Admin Full Name</label>

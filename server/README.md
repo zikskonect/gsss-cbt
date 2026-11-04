@@ -1,4 +1,4 @@
-# GSSS CBT — Central Server
+# GSS CBT — Central Server
 
 PHP + MariaDB central server for the CBT platform. Serves the REST API,
 the WebSocket presence channel, and (optionally) the client static files.

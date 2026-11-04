@@ -392,7 +392,7 @@ async function submitExam() {
 // ========================================
 
 async function quitCBT() {
-    if (confirm("Are you sure you want to exit the GSSS CBT System?")) {
+    if (confirm("Are you sure you want to exit the GSS CBT System?")) {
         try {
             const { exit } = window.__TAURI__.process;
             await exit(0);

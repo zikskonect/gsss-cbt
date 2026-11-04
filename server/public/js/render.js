@@ -163,7 +163,7 @@ Login
                  <form id="exam-office-registration-form" onsubmit="handleExamOfficeRegistration(event)" class="space-y-4">
                      <div>
                          <label for="exam-office-school-name" class="block text-sm font-semibold text-gray-700 mb-2">School Name</label>
-                         <input type="text" id="exam-office-school-name" class="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm md:text-base" placeholder="e.g., GSSS International" required />
+                         <input type="text" id="exam-office-school-name" class="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm md:text-base" placeholder="e.g., GSS International" required />
                      </div>
                      <div>
                          <label for="exam-office-admin-name" class="block text-sm font-semibold text-gray-700 mb-2">Admin Full Name</label>
@@ -501,7 +501,7 @@ function renderTeacherDashboard(state) {
                                 <i data-lucide="graduation-cap" class="w-8 h-8"></i>
                             </div>
                             <div>
-                                <h1 class="text-xl font-bold">GSSS T/M CBT</h1>
+                                <h1 class="text-xl font-bold">GSS T/M CBT</h1>
                                 <p class="text-xs text-blue-200">Teacher Portal</p>
                             </div>
                         </div>

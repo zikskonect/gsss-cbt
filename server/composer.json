@@ -1,6 +1,6 @@
 {
-    "name": "gsss/cbt-server",
-    "description": "GSSS CBT central server — REST API + WebSocket presence",
+    "name": "gss/cbt-server",
+    "description": "GSS CBT central server — REST API + WebSocket presence",
     "type": "project",
     "license": "proprietary",
     "require": {
