@@ -74,6 +74,7 @@ if (Request::method() === 'OPTIONS') {
 try {
     Database::boot($APP_CONFIG);
     Database::ensureAuthenticationTables();
+    Database::ensureDeviceApprovalColumns();
 } catch (\Throwable $e) {
     Response::serverError('Database unavailable: ' . $e->getMessage());
 }

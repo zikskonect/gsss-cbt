@@ -77,8 +77,8 @@ function renderAdminClassesPanel() {
                 <td class="px-4 py-3 text-right">
                     <button onclick="adminShowClassStudents('${encodeURIComponent(c.code)}', '${encodeURIComponent(c.name)}')"
                             class="text-purple-600 hover:bg-purple-50 px-3 py-2 rounded-lg transition-colors text-xs font-semibold" title="View registered students">
-                        <i data-lucide="users" class="w-4 h-4 inline-block"></i>
-                        Students <span id="class-student-count-${encodeURIComponent(c.code).replace(/%/g, '_')}" class="inline-flex min-w-6 justify-center px-2 py-0.5 rounded-full bg-green-100 text-green-700 border border-green-200 font-bold">…</span>
+                        <i data-lucide="users" class="w-4 h-4 inline-block"></i> View Students
+                        <span id="class-student-count-${encodeURIComponent(c.code).replace(/%/g, '_')}" class="inline-flex min-w-6 justify-center px-2 py-0.5 rounded-full bg-green-100 text-green-700 border border-green-200 font-bold">…</span>
                     </button>
                     <button onclick="adminImportClassStudents('${encodeURIComponent(c.code)}', '${encodeURIComponent(state.currentAcademicYear?.year_id || SCHOOL_CONFIG.academicYear)}')"
                             class="text-green-600 hover:bg-green-50 px-3 py-2 rounded-lg transition-colors text-xs font-semibold" title="Import students shared by teachers">

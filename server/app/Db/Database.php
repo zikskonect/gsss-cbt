@@ -96,6 +96,35 @@ SQL,
     }
 
     /**
+     * Add device approval columns to databases created by older releases.
+     */
+    public static function ensureDeviceApprovalColumns(): void
+    {
+        $columns = [
+            'approved_at' => 'DATETIME DEFAULT NULL',
+            'approved_by' => 'VARCHAR(20) DEFAULT NULL',
+            'blocked_at'  => 'DATETIME DEFAULT NULL',
+            'blocked_by'  => 'VARCHAR(20) DEFAULT NULL',
+        ];
+
+        foreach ($columns as $column => $definition) {
+            $exists = self::one(
+                'SELECT 1
+                   FROM information_schema.columns
+                  WHERE table_schema = DATABASE()
+                    AND table_name = ?
+                    AND column_name = ?
+                  LIMIT 1',
+                ['devices', $column]
+            );
+
+            if (!$exists) {
+                self::pdo()->exec("ALTER TABLE devices ADD COLUMN `$column` $definition");
+            }
+        }
+    }
+
+    /**
      * Get the shared PDO instance, creating it on first call.
      */
     public static function pdo(): PDO

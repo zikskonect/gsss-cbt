@@ -15,10 +15,10 @@ return [
         'env'          => 'production',
         'debug'        => false,
         'timezone'     => 'Africa/Lagos',
-        'url'          => 'http://192.168.1.176:8000',
+        'url'          => 'http://192.168.0.38:8000',
     ],
     'security' => [
-        'app_secret' => 'gss_gwags_prod_99jpjec17it',
+        'app_secret' => 'gss_gwags_prod_1thenz1ysps',
         'token_ttl'  => 43200,
         'max_login_attempts' => 20,
         'lockout_window'     => 900,
