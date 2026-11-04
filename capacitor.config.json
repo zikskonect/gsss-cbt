@@ -1,5 +1,5 @@
 {
-  "appId": "com.gssscbt.app",
+  "appId": "com.zikskonect.gssscbt",
   "appName": "GSSS CBT",
-  "webDir": "server/public"
+  "webDir": "public"
 }

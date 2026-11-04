@@ -6,9 +6,9 @@
     "build": "tailwindcss -c tailwind.config.js -i server\\public\\js\\styles.css -o server\\public\\tailwind.css --minify"
   },
   "dependencies": {
-    "@capacitor/android": "^8.5.2",
-    "@capacitor/cli": "^8.5.2",
-    "@capacitor/core": "^8.5.2",
+    "@capacitor/android": "^8.6.0",
+    "@capacitor/cli": "^8.6.0",
+    "@capacitor/core": "^8.6.0",
     "@capacitor/filesystem": "^8.1.4",
     "@capacitor/share": "^8.0.3",
     "@capawesome/capacitor-file-picker": "^8.1.0"
