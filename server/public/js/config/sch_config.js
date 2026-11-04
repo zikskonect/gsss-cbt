@@ -91,7 +91,7 @@ const SCHOOL_CONFIG = {
         EXAM: {
             label: 'Examination',
             shortLabel: 'Exam',
-            maxQuestions: 100,
+            maxQuestions: 200,
             defaultDuration: 30,
             icon: 'graduation-cap',
             color: '#2563EB',

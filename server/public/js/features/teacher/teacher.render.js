@@ -452,7 +452,7 @@ function renderCreateExamPage(state) {
     
     const config = window.SCHOOL_CONFIG?.assessmentTypes || {
         CA: { label: 'Continuous Assessment', shortLabel: 'CA', maxQuestions: 20, defaultDuration: 30, color: '#059669' },
-        EXAM: { label: 'Examination', shortLabel: 'Exam', maxQuestions: 100, defaultDuration: 120, color: '#B80236' }
+        EXAM: { label: 'Examination', shortLabel: 'Exam', maxQuestions: 200, defaultDuration: 120, color: '#B80236' }
     };
     
     const caActive = assessmentType === 'CA' ? 'active' : '';

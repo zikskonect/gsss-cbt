@@ -16,15 +16,15 @@ function getMaxQuestions() {
     const type = getAssessmentType();
     const config = window.SCHOOL_CONFIG?.assessmentTypes || {
         CA: { maxQuestions: 20 },
-        EXAM: { maxQuestions: 100 }
+        EXAM: { maxQuestions: 200 }
     };
-    return config[type]?.maxQuestions || (type === 'CA' ? 20 : 100);
+    return config[type]?.maxQuestions || (type === 'CA' ? 20 : 200);
 }
 
 function getAssessmentConfig(type) {
     const config = window.SCHOOL_CONFIG?.assessmentTypes || {
         CA: { label: 'Continuous Assessment', shortLabel: 'CA', maxQuestions: 20, defaultDuration: 30, color: '#059669' },
-        EXAM: { label: 'Examination', shortLabel: 'Exam', maxQuestions: 100, defaultDuration: 120, color: '#2563EB' }
+        EXAM: { label: 'Examination', shortLabel: 'Exam', maxQuestions: 200, defaultDuration: 60, color: '#2563EB' }
     };
     return config[type] || config.EXAM;
 }
@@ -32,7 +32,7 @@ function getAssessmentConfig(type) {
 function toggleAssessmentType(type) {
     const config = window.SCHOOL_CONFIG?.assessmentTypes || {
         CA: { maxQuestions: 20, defaultDuration: 30 },
-        EXAM: { maxQuestions: 100, defaultDuration: 120 }
+        EXAM: { maxQuestions: 200, defaultDuration: 120 }
     };
 
     state.assessmentType = type;
@@ -52,7 +52,7 @@ function toggleAssessmentType(type) {
     }
 
     if (questionLimitInfo) {
-        const maxQ = config[type].maxQuestions || (type === 'CA' ? 20 : 100);
+        const maxQ = config[type].maxQuestions || (type === 'CA' ? 20 : 200);
         questionLimitInfo.textContent = `Maximum ${maxQ} questions for ${type}`;
         questionLimitInfo.className = `text-xs font-medium mt-1 ${type === 'CA' ? 'text-emerald-600' : 'text-rose-600'}`;
     }
