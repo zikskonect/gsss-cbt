@@ -1,0 +1,9 @@
+# server/.gitignore
+vendor/
+app/config/config.php
+*.log
+.DS_Store
+
+# Append these lines to server/.gitignore
+runtime/ws_queue/*.json
+runtime/ws_queue/*.tmp

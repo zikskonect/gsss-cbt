@@ -1,0 +1,174 @@
+/* ═══════════════════════════════════════════════════════════
+   LAN Status Indicator (fixed top-right pill)
+   ═══════════════════════════════════════════════════════════ */
+
+.lan-status-pill {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 9998;             
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: system-ui, -apple-system, sans-serif;
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+    border: 1px solid rgba(0,0,0,0.08);
+    cursor: pointer;
+    user-select: none;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    pointer-events: auto;
+}
+
+.lan-status-pill:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.16);
+}
+
+.lan-status-dot {
+    display: inline-block;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #9ca3af;
+    box-shadow: 0 0 0 2px rgba(0,0,0,0.05);
+    flex-shrink: 0;
+}
+
+.lan-status-label {
+    color: #1f2937;
+    white-space: nowrap;
+}
+
+.lan-status-queue {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 9px;
+    background: #f59e0b;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+/* Colours per state */
+.lan-status-green .lan-status-dot {
+    background: #0de49c;
+    box-shadow: 0 0 0 2px rgba(16,185,129,0.25);
+    animation: lan-pulse-green 2.4s infinite;
+}
+.lan-status-green { border-color: rgba(16,185,129,0.35); }
+
+.lan-status-amber .lan-status-dot { background: #f59e0b; box-shadow: 0 0 0 2px rgba(245,158,11,0.25); }
+.lan-status-amber { border-color: rgba(245,158,11,0.4); }
+
+.lan-status-red .lan-status-dot {
+    background: #445eef;
+    box-shadow: 0 0 0 2px rgba(72, 102, 235, 0.25);
+    animation: lan-pulse-red 1.6s infinite;
+}
+.lan-status-red { border-color: rgba(62, 59, 241, 0.4)0.4).4); }
+
+.lan-status-grey .lan-status-dot { background: #9ca3af; }
+
+@keyframes lan-pulse-green {
+    0%, 100% { box-shadow: 0 0 0 2px rgba(16,185,129,0.25); }
+    50%      { box-shadow: 0 0 0 6px rgba(16,185,129,0.05); }
+}
+
+@keyframes lan-pulse-red {
+    0%, 100% { box-shadow: 0 0 0 2px rgba(239,68,68,0.25); }
+    50%      { box-shadow: 0 0 0 6px rgba(239,68,68,0.05); }
+}
+
+/* Detail panel */
+.lan-status-details {
+    position: fixed;
+    bottom: 70px;
+    right: 20px;
+    z-index: 9998;
+    width: 320px;
+    max-width: calc(100vw - 24px);
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.18);
+    padding: 14px 16px;
+    font-family: system-ui, -apple-system, sans-serif;
+    font-size: 13px;
+    color: #1f2937;
+}
+
+.lan-details-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #eee;
+}
+
+.lan-details-close {
+    cursor: pointer;
+    color: #9ca3af;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+.lan-details-close:hover { background: #f3f4f6; color: #374151; }
+
+.lan-details-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0;
+    font-size: 12px;
+}
+
+.lan-details-row span { color: #6b7280; }
+.lan-details-row strong { font-weight: 600; }
+
+.lan-details-row code {
+    font-family: ui-monospace, monospace;
+    font-size: 11px;
+    background: #f3f4f6;
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: #374151;
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.lan-details-green { color: #10b981; }
+.lan-details-amber { color: #f59e0b; }
+.lan-details-red   { color: #2d82b3; }
+.lan-details-grey  { color: #6b7280; }
+
+.lan-details-btn {
+    display: block;
+    width: 100%;
+    margin-top: 12px;
+    padding: 8px;
+    background: #02b8af;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.lan-details-btn:hover { background: #290ab3; }
+
+/* Hide on tiny screens to avoid crowding the close button */
+@media (max-width: 480px) {
+    .lan-status-pill .lan-status-label { display: none; }
+    .lan-status-pill { padding: 6px 8px; }
+}

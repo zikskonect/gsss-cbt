@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>GSS Gwags CBT - One Click Server</title>
+<style>
+*{box-sizing:border-box} body{margin:0;font-family:Inter,Segoe UI,sans-serif;background:#0f172a;color:#e2e8f0;display:flex;min-height:100vh}
+.sidebar{width:320px;background:#020617;padding:20px;display:flex;flex-direction:column;gap:16px;border-right:1px solid #1e293b}
+.main{flex:1;padding:24px;overflow:auto}
+.card{background:#1e293b;border-radius:16px;padding:18px;border:1px solid #334155}
+.h1{font-size:28px;font-weight:900;margin:0 0 8px} .muted{color:#94a3b8;font-size:13px}
+.btn{padding:14px 20px;border-radius:12px;border:none;font-weight:800;cursor:pointer;font-size:15px;width:100%;margin-top:10px;transition:.2s}
+.btn-start{background:#10b981;color:white} .btn-start:hover{background:#059669}
+.btn-stop{background:#ef4444;color:white} .btn-blue{background:#3b82f6;color:white} .btn-purple{background:#8b5cf6;color:white}
+.status-dot{width:12px;height:12px;border-radius:50%;display:inline-block;margin-right:8px}
+.status-run{background:#10b981;box-shadow:0 0 10px #10b981} .status-stop{background:#475569}
+.url-box{background:#0f172a;border-radius:10px;padding:12px;font-family:monospace;font-size:18px;color:#10b981;font-weight:800;text-align:center;border:1px dashed #334155}
+#qr{width:220px;height:220px;background:white;border-radius:12px;padding:8px;display:none;margin:12px auto}
+.log{background:#020617;border-radius:10px;padding:10px;font-family:Consolas,monospace;font-size:11px;height:220px;overflow:auto;border:1px solid #1e293b;white-space:pre-wrap}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:900px){.grid{grid-template-columns:1fr} .sidebar{width:100%} body{flex-direction:column}}
+.kbd{background:#334155;padding:2px 6px;border-radius:4px;font-size:11px}
+</style>
+</head>
+<body>
+<div class="sidebar">
+  <h1 class="h1">🏫 GSS Gwags CBT</h1>
+  <div class="muted">One-Click Server for Schools<br>No technical knowledge needed</div>
+  <div class="card">
+    <div><span id="dot" class="status-dot status-stop"></span><span id="statusText">Stopped</span></div>
+    <div class="muted" id="uptime" style="margin-top:6px"></div>
+    <button id="startBtn" class="btn btn-start" onclick="startServer()">▶ START SERVER</button>
+    <button id="stopBtn" class="btn btn-stop" onclick="stopServer()" style="display:none">■ STOP SERVER</button>
+    <button class="btn btn-blue" onclick="openBrowser()">🌐 Open in Browser</button>
+    <button class="btn btn-purple" onclick="backup()">💾 Backup Database</button>
+  </div>
+  <div class="card">
+    <div class="muted">Teacher Action:</div>
+    <div style="font-size:13px;line-height:1.6">
+      1. Click <span class="kbd">START SERVER</span><br>
+      2. Share the URL or QR to students<br>
+      3. Click <span class="kbd">Open in Browser</span> to manage exams<br>
+      4. When done, click <span class="kbd">STOP SERVER</span>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+  <div class="grid">
+    <div class="card">
+      <h3 style="margin:0 0 8px">📡 Students / Teachers Open This:</h3>
+      <div id="url" class="url-box">http://192.168.1.176:8000</div>
+      <img id="qr" />
+      <div class="muted" style="text-align:center;margin-top:8px">Scan QR code with phone camera<br>Make sure all devices are on same WiFi (School WiFi)</div>
+      <div style="margin-top:12px" class="muted">
+        <b>Main PC IP:</b> <span id="ip">--</span><br>
+        <b>WiFi Interfaces:</b> <div id="ifaces" style="font-size:11px"></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3 style="margin:0 0 8px">📊 How it helps non-technical staff</h3>
+      <div style="font-size:13px;line-height:1.7">
+        ✅ <b>No WAMP/Laragon needed</b> - MySQL + PHP bundled inside .exe<br>
+        ✅ <b>Central DB</b> - All teachers/students saved in one place (cbt_platform)<br>
+        ✅ <b>One button</b> - Teacher clicks START, everything runs<br>
+        ✅ <b>QR code</b> - Students scan, no typing IP<br>
+        ✅ <b>Offline</b> - No internet needed, works on school LAN<br>
+        ✅ <b>Backup</b> - One click backup to Documents<br>
+        ✅ <b>Firewall</b> - App auto opens ports 8000/8081<br><br>
+        <b>When you are not there:</b> Teacher just double-clicks GSS Gwags CBT icon → START → share URL. No config.
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <h3 style="margin:0 0 8px">📝 Live Logs</h3>
+    <div id="logs" class="log">Waiting for server start...</div>
+  </div>
+</div>
+
+<script>
+const api = window.serverApi;
+let statusTimer=null;
+
+async function refresh() {
+  const s = await api.getStatus();
+  const running = s.running;
+  document.getElementById('dot').className = 'status-dot ' + (running ? 'status-run' : 'status-stop');
+  document.getElementById('statusText').textContent = running ? '🟢 RUNNING - Server is live!' : '⚫ Stopped';
+  document.getElementById('uptime').textContent = running ? `Uptime: ${Math.floor(s.uptime/1000/60)} mins` : '';
+  document.getElementById('ip').textContent = s.network.primaryIp;
+  document.getElementById('url').textContent = s.network.url;
+  document.getElementById('ifaces').textContent = s.network.interfaces.map(i=>`${i.name}: ${i.address}`).join(', ');
+  document.getElementById('startBtn').style.display = running ? 'none':'block';
+  document.getElementById('stopBtn').style.display = running ? 'block':'none';
+
+  // QR
+  const qr = await api.getQr(s.network.url);
+  if (qr) { const img=document.getElementById('qr'); img.src=qr; img.style.display='block'; }
+
+  // logs
+  if (s.logs && s.logs.length) {
+    const el=document.getElementById('logs');
+    el.innerHTML = s.logs.map(l=>`[${new Date(l.ts).toLocaleTimeString()}] [${l.source}] ${l.text}`).join('\n');
+    el.scrollTop = el.scrollHeight;
+  }
+}
+async function startServer() {
+  document.getElementById('startBtn').textContent='⏳ Starting... please wait 10 secs';
+  document.getElementById('startBtn').disabled=true;
+  const r = await api.start();
+  document.getElementById('startBtn').textContent='▶ START SERVER';
+  document.getElementById('startBtn').disabled=false;
+  if (!r.ok) alert('Start failed: '+r.error);
+  refresh();
+}
+async function stopServer() { await api.stop(); refresh(); }
+async function openBrowser() { await api.openInBrowser(); }
+async function backup() { const r=await api.backup(); alert(r.ok ? `Backup created: ${r.path}` : r.error); }
+
+api.onLog(entry => {
+  const el=document.getElementById('logs');
+  el.textContent += `\n[${entry.source}] ${entry.text}`;
+  el.scrollTop = el.scrollHeight;
+});
+api.onStatus(()=>refresh());
+
+refresh();
+statusTimer=setInterval(refresh, 3000);
+</script>
+</body>
+</html>

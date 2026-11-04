@@ -1,0 +1,47 @@
+{
+  "name": "gsss-cbt-server",
+  "version": "1.0.0",
+  "description": "GSSS CBT Server — one-click exam server for schools",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --win --x64",
+    "build:portable": "electron-builder --win portable"
+  },
+  "author": "GSS Gwags",
+  "build": {
+    "appId": "com.gssgwags.cbt.server",
+    "productName": "GSS Gwags CBT Server",
+    "directories": {
+      "output": "../dist/desktop"
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "icon": "renderer/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true
+    },
+    "extraResources": [
+      {
+        "from": "runtime",
+        "to": "runtime",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ]
+  },
+  "devDependencies": {
+    "electron": "^32.0.0",
+    "electron-builder": "^24.9.1"
+  },
+  "dependencies": {
+    "qrcode": "^1.5.3"
+  }
+}

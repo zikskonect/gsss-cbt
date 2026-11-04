@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GSSS - CBT App</title>
+
+    <base href="/">
+
+    <link rel="stylesheet" href="tailwind.css">
+    <script src="js/lucide.js"></script>
+
+    <style>
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 3px; }
+
+        .no-select {
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        * { transition: all 0.2s ease; }
+
+        .titlebar {
+            height: 32px;
+            background: #1e3a8a;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            padding: 0 10px;
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 9999;
+            -webkit-app-region: drag;
+        }
+
+        .titlebar-button {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            width: 40px;
+            height: 40px;
+            color: white;
+            cursor: pointer;
+            -webkit-app-region: no-drag;
+        }
+
+        .titlebar-button:hover { background: rgba(255, 255, 255, 0.1); }
+        .titlebar-button.close:hover { background: #4687e9; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen no-select">
+
+    <div id="app" class="min-h-screen pt-0">
+        <!-- Initial loading screen with faded background image -->
+        <div id="initial-loader" class="flex items-center justify-center min-h-screen relative">
+            <div style="
+                position: absolute;
+                inset: 0;
+                background-image: url('assets/home/gsss-app.jpg');
+                background-size: cover;
+                background-position: center;
+                background-repeat: no-repeat;
+                opacity: 0.15;
+                pointer-events: none;
+                z-index: 0;
+            "></div>
+
+            <div class="text-center relative z-10">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2563EB] mx-auto"></div>
+                <p class="mt-4 text-gray-600 font-semibold">GSSS CBT</p>
+                <p id="loading-status" class="mt-2 text-sm text-gray-400">Loading Application...</p>
+            </div>
+        </div>
+    </div>
+
+<!-- 1. CONFIG -->
+<script src="js/config/app_config.js"></script>
+<script src="js/config/sch_config.js"></script>
+
+<!-- 2. CORE UTILS -->
+<script src="js/state.js"></script>
+<script src="js/core/student-id.js"></script>
+<script src="js/core/alerts.js"></script>
+<script src="js/core/utils.js"></script>
+<script src="js/core/device-gate.js"></script>
+
+<!-- 3. STORAGE -->
+<script src="js/storage.js"></script>
+
+<!-- 3.5 LAN LAYER -->
+<script src="js/lan/lan.config.js"></script>
+<script src="js/lan/lan.api.js"></script>
+<script src="js/lan/lan.device.js"></script>
+<script src="js/lan/lan.socket.js"></script>
+<script src="js/lan/lan.sync.js"></script>
+<script src="js/lan/lan.status.js"></script>
+<script src="js/lan/lan.harvest.js"></script>
+<script src="js/lan/lan.integration.js"></script>
+<script src="js/lan/lan.bootstrap.js"></script>
+
+
+<!-- 4. AUTH -->
+<script src="js/core/auth.shared.js"></script>
+<script src="js/features/teacher/auth.teacher.js"></script>
+<script src="js/features/exam-officer/auth.exam-office.js"></script>
+<script src="js/features/form-teacher/auth.form-teacher.js"></script>
+<script src="js/features/student/auth.student.js"></script>
+
+<!-- 5. SHARED & FEATURES -->
+<script src="js/shared/home.render.js"></script>
+<script src="js/shared/image-handling.js"></script>
+<script src="js/shared/results-shared.js"></script>
+<script src="js/shared/schedule.js"></script>
+<script src="js/shared/sidebar.js"></script>
+
+<script src="js/features/teacher/student.generator.js"></script>
+<script src="js/features/teacher/form-teacher.actions.js"></script>
+<script src="js/features/teacher/register-student.render.js"></script>
+<script src="js/features/teacher/teacher.actions.js"></script>
+<script src="js/features/teacher/teacher.render.js"></script>
+<script src="js/features/form-teacher/form-teacher.render.js"></script>
+<script src="js/features/exam-officer/exam-officer.actions.js"></script>
+<script src="js/features/exam-officer/exam-officer.render.js"></script>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!--  FEATURES — ADMIN                                      -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<script src="js/features/admin/admin.actions.js"></script>
+<script src="js/features/admin/admin.classes.js"></script>
+<script src="js/features/admin/admin.arms.js"></script>
+<script src="js/features/admin/admin.departments.js"></script>
+<script src="js/features/admin/admin.assignments.js"></script>
+<script src="js/features/admin/admin.year.js"></script>
+<script src="js/features/admin/admin.devices.js"></script>
+<script src="js/features/admin/admin.render.js"></script>
+<script src="js/features/admin/admin.devices.render.js"></script>
+<script src="js/features/admin/admin-settings.js"></script>
+<script src="js/features/admin/admin-settings-render.js"></script>
+<script src="js/features/admin/admin.users.render.js"></script>
+<script src="js/features/admin/admin.users.pull.js"></script>
+<script src="js/features/admin/Admin-Exam-Settings.js"></script>
+<script src="js/features/student/Student-Exam-Limit.js"></script>
+
+<!-- FEATURES — STUDENT  -->
+<script src="js/features/student/student-login.render.js"></script>
+<script src="js/features/student/student.actions.js"></script>
+<script src="js/features/student/student.render.js"></script>
+
+<!-- 6. ROUTER & BOOT -->
+<script src="js/core/router.js"></script>
+<script src="js/render.js"></script>
+<script src="js/main.js"></script>
+
+    <script>
+        // Initialize Lucide icons
+        if (window.lucide) {
+            lucide.createIcons();
+        }
+
+        // The app is auto-started by main.js's init() call.
+
+        window.addEventListener('load', () => {
+            console.log('✅ HTML UI Ready');
+        });
+    </script>
+</body>
+</html>
