@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "GSSS CBT Exam Platform",
   "scripts": {
-    "build": "tailwindcss -c tailwind.config.js -i www\\js\\styles.css -o www\\tailwind.css --minify"
+    "build": "tailwindcss -c tailwind.config.js -i server\\public\\js\\styles.css -o server\\public\\tailwind.css --minify"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.2",

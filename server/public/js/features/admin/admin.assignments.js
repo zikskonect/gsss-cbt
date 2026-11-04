@@ -35,7 +35,9 @@ async function adminAssignFormTeacher(opts) {
             return { ok: false, error: 'Phone number looks invalid' };
         }
 
-        const currentYear = state.currentAcademicYear?.year_id || SCHOOL_CONFIG.academicYear;
+        const currentYear = opts.academic_year
+            || state.currentAcademicYear?.year_id
+            || SCHOOL_CONFIG.academicYear;
 
         // Prevent two form teachers on the same class+arm+year
         const all = await loadAllFormTeacherAssignmentsFromDB();

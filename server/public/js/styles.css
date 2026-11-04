@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 /* ═══════════════════════════════════════════════════════════
    LAN Status Indicator (fixed top-right pill)
    ═══════════════════════════════════════════════════════════ */

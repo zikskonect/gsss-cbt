@@ -17,7 +17,7 @@ const APP_CONFIG = {
 
     // Storage Settings
     dbName: 'testulatorDB',
-    dbVersion: 13,
+    dbVersion: 14,
 
     // UI Settings
     animationDuration: 300,

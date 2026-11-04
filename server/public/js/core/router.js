@@ -99,7 +99,10 @@ function render() {
             pageContent = renderTeacherDashboard(state);
             break;
         case 'register-student':
-            if (!state.isFormTeacher) { setPage('teacher-login'); return; }
+            if (!state.isFormTeacher && !['form_teacher', 'form-teacher'].includes(state.user?.role)) {
+                setPage('teacher-login');
+                return;
+            }
             pageContent = renderRegisterStudentPage(state);
             break;
         case 'create-exam':
@@ -231,7 +234,9 @@ async function setPage(page) {
     if (examOfficeOnly.includes(page) && !state.isExamOffice) {
         setPage('exam-office-login'); return;
     }
-    if (formTeacherOnly.includes(page) && !state.isFormTeacher) {
+    const isFormTeacher = state.isFormTeacher
+        || ['form_teacher', 'form-teacher'].includes(state.user?.role);
+    if (formTeacherOnly.includes(page) && !isFormTeacher) {
         setPage('form-teacher-login'); return;
     }
     if (studentOnly.includes(page) && !state.isStudent) {

@@ -9,7 +9,6 @@ function renderAdminSettingsPage(state) {
         { id: 'classes',     icon: 'school',        label: 'Classes' },
         { id: 'arms',        icon: 'split',         label: 'Arms' },
         { id: 'departments', icon: 'layers',        label: 'Departments' },
-        { id: 'assignments', icon: 'user-check',    label: 'Form Teachers' },
         { id: 'year',        icon: 'calendar-days', label: 'Academic Year' },
         { id: 'devices',     icon: 'monitor',       label: 'Devices' },
         { id: 'users',       icon: 'users',         label: 'All Users' }, // NEW

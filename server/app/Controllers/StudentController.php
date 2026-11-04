@@ -132,12 +132,10 @@ class StudentController
         Response::ok(['student' => $student]);
     }
 
-    /**
+        /**
      * POST /api/students
      * Form teacher OR exam office creates a student.
      * The exam code is generated server-side — clients do NOT send it.
-     *
-     * Body: { name, class_code, arm, academic_year?, department_id?, department_name? }
      */
     public function create(array $params = []): void
     {
@@ -194,16 +192,23 @@ class StudentController
 
         Database::begin();
         try {
-            // Lock-based next-serial computation.
-            // We compute MAX(serial) for (class_code, year), then insert.
-            // The unique key on (class_code, year, serial) protects us
-            // against races if two form teachers submit simultaneously.
+            // Lock the CLASS row so concurrent registrations for this class serialize.
+            $clsLocked = Database::one(
+                'SELECT class_id FROM classes WHERE code = ? FOR UPDATE',
+                [$classCode]
+            );
+            if (!$clsLocked) {
+                Database::rollback();
+                Response::error('Class not found', 'class_not_found', 404);
+                return;
+            }
+
+            // Safe now: we hold the class lock, so no other request can compute the same serial.
             $maxRow = Database::one(
                 'SELECT MAX(serial) AS max_serial
                    FROM students
-                  WHERE class_code = ? AND academic_year = ?
-                  FOR UPDATE',
-                [$classCode, $year]
+                  WHERE class_code = ?',
+                [$classCode]
             );
             $nextSerial = ($maxRow && $maxRow['max_serial'] !== null)
                 ? ((int) $maxRow['max_serial']) + 1
@@ -236,11 +241,15 @@ class StudentController
         } catch (\Throwable $e) {
             Database::rollback();
 
-            // Unique-key collision → someone else grabbed the serial
-            if (strpos($e->getMessage(), 'uniq_class_year_serial') !== false) {
-                Response::error('Serial collision, please retry', 'serial_collision', 409);
+            $msg = $e->getMessage();
+            if (strpos($msg, 'exam_code') !== false
+                || strpos($msg, 'uniq_class_year_serial') !== false
+                || strpos($msg, 'Duplicate entry') !== false) {
+                Response::error('Exam code collision, please retry', 'code_collision', 409);
+                return;
             }
-            Response::serverError('Failed to create student: ' . $e->getMessage());
+            Response::serverError('Failed to create student: ' . $msg);
+            return;
         }
 
         $student = Database::one('SELECT * FROM students WHERE student_id = ?', [$studentId]);

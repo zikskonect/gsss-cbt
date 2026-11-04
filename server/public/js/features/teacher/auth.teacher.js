@@ -237,7 +237,7 @@ async function handleTeacherLogin(event) {
         if (window.LanDevice) LanDevice.reportRole(user.role);
 
         // 4. Load data based on role
-        if (state.isFormTeacher) {
+        if (state.isFormTeacher || state.isTeacher) {
             let assignments = [];
             if (LAN_CONFIG?.enabled && navigator.onLine) {
                 try {
@@ -255,6 +255,9 @@ async function handleTeacherLogin(event) {
             }
 
             state.myAssignments = assignments || [];
+            if (state.myAssignments.length > 0) {
+                state.isFormTeacher = true;
+            }
             state.activeAssignment = state.myAssignments[0] || null;
 
             if (state.activeAssignment) {

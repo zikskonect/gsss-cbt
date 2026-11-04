@@ -1938,6 +1938,7 @@ async function deleteExamFromExamOffice(examId, examSubject) {
     }
 }
 
+<<<<<<< HEAD:server/public/js/features/exam-officer/exam-officer.actions.js
 
 // ========================================
 // PUSH EXAMS HANDLERS
@@ -2037,6 +2038,9 @@ window.openPushAllModal = openPushAllModal;
 window.closePushAllModal = closePushAllModal;
 window.executePushAll = executePushAll;
 window.executeHarvestResults = executeHarvestResults;
+=======
+// Add these to window exports at the bottom of the file:
+>>>>>>> 71e97829ba7ddc41c4d13d57d771c8fcf90ed26b:www/js/features/exam-officer/exam-officer.actions.js
 window.handleScheduleCheckboxChange = handleScheduleCheckboxChange;
 window.openBulkScheduleModal = openBulkScheduleModal;
 window.closeBulkScheduleModal = closeBulkScheduleModal;

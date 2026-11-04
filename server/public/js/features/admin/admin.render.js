@@ -64,6 +64,7 @@ async function switchAdminTab(tabId) {
 
 function renderAdminClassesPanel() {
     const classes = state.classes || [];
+    setTimeout(adminLoadClassStudentCounts, 0);
 
     const rows = classes.length === 0
         ? `<tr><td colspan="5" class="px-4 py-12 text-center text-gray-500">No classes yet. Add one above.</td></tr>`
@@ -74,6 +75,15 @@ function renderAdminClassesPanel() {
                 <td class="px-4 py-3 text-sm text-gray-600">${c.level || '—'}</td>
                 <td class="px-4 py-3 text-sm text-gray-500">${new Date(c.created_at).toLocaleDateString()}</td>
                 <td class="px-4 py-3 text-right">
+                    <button onclick="adminShowClassStudents('${encodeURIComponent(c.code)}', '${encodeURIComponent(c.name)}')"
+                            class="text-purple-600 hover:bg-purple-50 px-3 py-2 rounded-lg transition-colors text-xs font-semibold" title="View registered students">
+                        <i data-lucide="users" class="w-4 h-4 inline-block"></i>
+                        Students <span id="class-student-count-${encodeURIComponent(c.code).replace(/%/g, '_')}" class="inline-flex min-w-6 justify-center px-2 py-0.5 rounded-full bg-green-100 text-green-700 border border-green-200 font-bold">…</span>
+                    </button>
+                    <button onclick="adminImportClassStudents('${encodeURIComponent(c.code)}', '${encodeURIComponent(state.currentAcademicYear?.year_id || SCHOOL_CONFIG.academicYear)}')"
+                            class="text-green-600 hover:bg-green-50 px-3 py-2 rounded-lg transition-colors text-xs font-semibold" title="Import students shared by teachers">
+                        <i data-lucide="download" class="w-4 h-4 inline-block"></i> Import
+                    </button>
                     <button onclick="handleDeleteClass('${c.class_id}')"
                             class="text-red-600 hover:bg-red-50 p-2 rounded-lg transition-colors" title="Delete">
                         <i data-lucide="trash-2" class="w-4 h-4"></i>
@@ -121,6 +131,130 @@ function renderAdminClassesPanel() {
         </div>
     `;
 }
+
+async function adminLoadClassStudentCounts() {
+    const year = state.currentAcademicYear?.year_id || SCHOOL_CONFIG.academicYear;
+    let students = [];
+
+    try {
+        if (window.LanApi && window.LAN_CONFIG?.enabled && window.LanApi.loadToken()) {
+            const response = await LanApi.get('/students?year=' + encodeURIComponent(year));
+            if (!response.ok) throw new Error(response.error?.message || 'Could not load student counts');
+            students = response.data?.students || [];
+        } else if (typeof loadStudentsByYear === 'function') {
+            students = await loadStudentsByYear(year);
+        }
+    } catch (error) {
+        console.warn('Could not load class student counts:', error.message);
+        return;
+    }
+
+    const counts = students.reduce((result, student) => {
+        result[student.class_code] = (result[student.class_code] || 0) + 1;
+        return result;
+    }, {});
+
+    (state.classes || []).forEach(classItem => {
+        const id = `class-student-count-${encodeURIComponent(classItem.code).replace(/%/g, '_')}`;
+        const badge = document.getElementById(id);
+        if (badge) badge.textContent = counts[classItem.code] || '0';
+    });
+}
+
+async function adminShowClassStudents(encodedCode, encodedName) {
+    const classCode = decodeURIComponent(encodedCode);
+    const className = decodeURIComponent(encodedName);
+    const year = state.currentAcademicYear?.year_id || SCHOOL_CONFIG.academicYear;
+    const modal = document.createElement('div');
+    modal.id = 'admin-class-students-modal';
+    modal.className = 'fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4';
+    modal.innerHTML = `
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+            <div class="p-5 border-b flex items-center justify-between">
+                <div>
+                    <h3 class="text-lg font-bold text-gray-800">${className} students</h3>
+                    <p class="text-sm text-gray-500">${classCode} · ${year}</p>
+                </div>
+                <button onclick="document.getElementById('admin-class-students-modal')?.remove()" class="text-gray-400 hover:text-gray-700 text-2xl">×</button>
+            </div>
+            <div id="admin-class-students-content" class="p-5 overflow-y-auto">
+                <div class="text-center py-10 text-gray-500">Loading registered students...</div>
+            </div>
+            <div class="p-4 border-t flex justify-end gap-3">
+                <button onclick="adminImportClassStudents('${encodeURIComponent(classCode)}', '${encodeURIComponent(year)}')"
+                        class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold text-sm">
+                    Import Students
+                </button>
+                <button onclick="document.getElementById('admin-class-students-modal')?.remove()"
+                        class="px-4 py-2 border border-gray-300 rounded-lg text-sm">Close</button>
+            </div>
+        </div>`;
+    document.body.appendChild(modal);
+
+    try {
+        const response = await LanApi.get(
+            '/students?class_code=' + encodeURIComponent(classCode) + '&year=' + encodeURIComponent(year)
+        );
+        if (!response.ok) throw new Error(response.error?.message || 'Could not load students');
+        adminRenderClassStudents(response.data?.students || []);
+    } catch (error) {
+        const content = document.getElementById('admin-class-students-content');
+        if (content) content.innerHTML = `<p class="text-center py-10 text-red-600">${error.message}</p>`;
+    }
+}
+
+function adminRenderClassStudents(students) {
+    const content = document.getElementById('admin-class-students-content');
+    if (!content) return;
+    if (!students.length) {
+        content.innerHTML = '<p class="text-center py-10 text-gray-500">No students registered for this class and academic year.</p>';
+        return;
+    }
+    content.innerHTML = `
+        <p class="text-sm font-semibold text-gray-700 mb-3">Total registered: ${students.length}</p>
+        <div class="overflow-x-auto border rounded-lg">
+            <table class="w-full text-sm">
+                <thead class="bg-gray-50 border-b">
+                    <tr>
+                        <th class="text-left px-3 py-2">Exam Code</th>
+                        <th class="text-left px-3 py-2">Name</th>
+                        <th class="text-left px-3 py-2">Arm</th>
+                        <th class="text-left px-3 py-2">Department</th>
+                        <th class="text-left px-3 py-2">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${students.map(student => `
+                        <tr class="border-b last:border-0">
+                            <td class="px-3 py-2 font-mono text-purple-700">${student.exam_code || ''}</td>
+                            <td class="px-3 py-2">${student.name || ''}</td>
+                            <td class="px-3 py-2">${student.arm || ''}</td>
+                            <td class="px-3 py-2">${student.department_name || '—'}</td>
+                            <td class="px-3 py-2">${student.status || ''}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        </div>`;
+}
+
+async function adminImportClassStudents(encodedCode, encodedYear) {
+    const classCode = decodeURIComponent(encodedCode);
+    const year = decodeURIComponent(encodedYear);
+    if (!window.LanHarvest || !window.LanApi) {
+        showAlert('Central student import is unavailable', 'error');
+        return;
+    }
+    const result = await LanHarvest.syncStudentsDown(classCode, year);
+    if (!result.ok) {
+        showAlert(result.error?.message || 'Could not import students', 'error', 5000);
+        return;
+    }
+    showAlert(`Imported ${result.stored + result.updated} student record(s)`, 'success', 4000);
+}
+
+window.adminShowClassStudents = adminShowClassStudents;
+window.adminImportClassStudents = adminImportClassStudents;
 
 function renderAdminArmsPanel() {
     const arms = state.arms || [];

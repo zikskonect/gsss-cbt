@@ -145,6 +145,14 @@ const AdminUsersRender = {
           : `<span class="inline-flex items-center gap-1 text-xs font-medium text-red-600"><span class="w-2 h-2 bg-red-500 rounded-full"></span>${status}</span>`;
 
         const initials = name.split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase();
+        const canAssignClass = role === 'form_teacher';
+        const assignButton = canAssignClass
+          ? `<button onclick="AdminUsersRender.openAssignment('${phone}', '${name.replace(/'/g, "\\'")}')" class="px-3 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded-lg text-xs font-semibold transition-colors">
+                  Assign Class
+                </button>`
+          : `<button type="button" disabled title="Only form teachers can be assigned a class" class="px-3 py-1.5 bg-gray-100 text-gray-400 border border-gray-200 rounded-lg text-xs font-semibold cursor-not-allowed">
+                  Assign Class
+                </button>`;
 
         html += `
           <tr class="hover:bg-gray-50 transition-colors">
@@ -168,6 +176,7 @@ const AdminUsersRender = {
                 <button onclick="AdminUsersRender.toggleBlock('${phone}', '${status}')" class="px-3 py-1.5 ${status==='active' ? 'bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-200' : 'bg-green-50 hover:bg-green-100 text-green-700 border-green-200'} border rounded-lg text-xs font-semibold transition-colors">
                   ${status==='active' ? 'Block' : 'Unblock'}
                 </button>
+                ${assignButton}
                 <button onclick="AdminUsersRender.deleteUser('${phone}')" class="px-3 py-1.5 bg-gray-50 hover:bg-red-50 text-gray-600 hover:text-red-600 border border-gray-200 hover:border-red-200 rounded-lg text-xs font-semibold transition-colors">
                   Delete
                 </button>
@@ -237,6 +246,75 @@ const AdminUsersRender = {
       this.load();
     } catch (e) { alert(`Delete failed: ${e.message}`); }
   }
+};
+
+AdminUsersRender.openAssignment = async function (phone, name) {
+  const classes = await loadAllClassesFromDB();
+  const arms = await loadAllArmsFromDB();
+  const years = await loadAllAcademicYearsFromDB();
+  const currentYear = state.currentAcademicYear?.year_id || years.find(year => year.is_current)?.year_id || '';
+  const classOptions = classes.map(item => `<option value="${item.class_id}">${item.name} (${item.code})</option>`).join('');
+  const armOptions = arms.map(item => `<option value="${item.label}">${item.label}</option>`).join('');
+  const yearOptions = years.map(item => `<option value="${item.year_id}" ${item.year_id === currentYear ? 'selected' : ''}>${item.year_id}</option>`).join('');
+
+  const modal = document.createElement('div');
+  modal.id = 'user-assignment-modal';
+  modal.className = 'fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4';
+  modal.innerHTML = `
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+      <div class="flex items-center justify-between mb-5">
+        <div>
+          <h3 class="text-lg font-bold text-gray-800">Assign Class</h3>
+          <p class="text-sm text-gray-500">${name} · ${phone}</p>
+        </div>
+        <button type="button" onclick="document.getElementById('user-assignment-modal')?.remove()" class="text-gray-400 hover:text-gray-700 text-xl">×</button>
+      </div>
+      <form onsubmit="AdminUsersRender.submitAssignment(event, '${phone}', '${name.replace(/'/g, "\\'")}')" class="space-y-4">
+        <select id="user-assignment-class" required class="w-full px-3 py-2.5 border border-gray-300 rounded-lg">
+          <option value="">Select class</option>${classOptions}
+        </select>
+        <select id="user-assignment-arm" required class="w-full px-3 py-2.5 border border-gray-300 rounded-lg">
+          <option value="">Select arm</option>${armOptions}
+        </select>
+        <select id="user-assignment-year" required class="w-full px-3 py-2.5 border border-gray-300 rounded-lg">
+          <option value="">Select academic year</option>${yearOptions}
+        </select>
+        <div class="flex justify-end gap-3">
+          <button type="button" onclick="document.getElementById('user-assignment-modal')?.remove()" class="px-4 py-2 rounded-lg border border-gray-300">Cancel</button>
+          <button type="submit" class="px-4 py-2 rounded-lg bg-purple-600 text-white font-semibold">Assign</button>
+        </div>
+      </form>
+    </div>`;
+  document.body.appendChild(modal);
+};
+
+AdminUsersRender.submitAssignment = async function (event, phone, name) {
+  event.preventDefault();
+  const classId = document.getElementById('user-assignment-class')?.value || '';
+  const arm = document.getElementById('user-assignment-arm')?.value || '';
+  const year = document.getElementById('user-assignment-year')?.value || '';
+  const classes = await loadAllClassesFromDB();
+  const selectedClass = classes.find(item => item.class_id === classId);
+  if (!selectedClass || !arm || !year) {
+    showAlert('Select a class, arm, and academic year', 'error');
+    return;
+  }
+  const result = await adminAssignFormTeacher({
+    class_id: selectedClass.class_id,
+    class_name: selectedClass.name,
+    class_code: selectedClass.code,
+    arm,
+    academic_year: year,
+    teacher_name: name,
+    teacher_phone: phone,
+  });
+  if (!result.ok) {
+    showAlert(result.error, 'error', 6000);
+    return;
+  }
+  document.getElementById('user-assignment-modal')?.remove();
+  showAlert(`${name} assigned to ${selectedClass.name} ${arm}`, 'success', 4000);
+  AdminUsersRender.load();
 };
 
 function adminAuthHeaders() {

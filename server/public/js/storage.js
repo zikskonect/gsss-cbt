@@ -451,9 +451,32 @@ async function saveStudentToDB(student) {
     return new Promise((resolve, reject) => {
         const transaction = db.transaction(['students'], 'readwrite');
         const store = transaction.objectStore('students');
-        const request = store.put(student);
+        const examCode = normaliseExamCode(student.exam_code);
+        const request = examCode
+            ? store.index('exam_code').get(examCode)
+            : null;
+
+        const save = existing => {
+            // A central sync can replace a temporary local record while
+            // keeping its authoritative exam code. Remove that stale record
+            // before put() so the unique exam_code index remains valid.
+            if (existing && existing.student_id !== student.student_id) {
+                store.delete(existing.student_id);
+            }
+            const record = { ...student, exam_code: examCode || student.exam_code };
+            const putRequest = store.put(record);
+            putRequest.onerror = () => reject(putRequest.error);
+            putRequest.onsuccess = () => resolve(putRequest.result);
+        };
+
+        if (!request) {
+            save(null);
+            return;
+        }
+
         request.onerror = () => reject(request.error);
-        request.onsuccess = () => resolve(request.result);
+        request.onsuccess = () => save(request.result || null);
+        transaction.onerror = () => reject(transaction.error);
     });
 }
 

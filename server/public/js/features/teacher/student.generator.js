@@ -11,27 +11,38 @@ async function generateStudentRecord({ name, classId, className, classCode, arm,
         throw new Error('Missing required fields for student record');
     }
 
-    // Get existing students in this class+year to get next serial
+    // The server allocates the authoritative serial. This is only a preview
+    // for offline/local mode, so include all years because exam codes are
+    // globally unique and must never be reused.
     let existing = [];
     try {
-        if (window.loadStudentsByClassAndYear) {
-            existing = await loadStudentsByClassAndYear(classCode, academicYear) || [];
-        } else if (window.loadAllStudentsFromDB) {
+        if (window.loadAllStudentsFromDB) {
             const all = await loadAllStudentsFromDB() || [];
-            existing = all.filter(s => s.class_code === classCode && s.academic_year === academicYear);
+            existing = all.filter(s => s.class_code === classCode);
+        } else if (window.loadStudentsByClassAndYear) {
+            existing = await loadStudentsByClassAndYear(classCode, academicYear) || [];
         }
     } catch (e) {
         console.warn('Could not load existing students, starting from 1', e);
         existing = [];
     }
 
-    // Next serial = count + 1 (preserves deleted codes - never reused)
-    // For true never-reuse, we need to count all including removed, so count is correct
-    const nextSerial = existing.length + 1;
     const schoolCode = window.SCHOOL_CONFIG?.schoolCode || 'GSS';
-    
-    // Exam code: GSS/SS1/001
-    const examCode = `${schoolCode}/${classCode}/${String(nextSerial).padStart(3, '0')}`;
+    const existingCodes = new Set(
+        existing
+            .map(student => normaliseExamCode(student.exam_code || ''))
+            .filter(Boolean)
+    );
+    const serials = existing
+        .map(student => parseInt((student.exam_code || '').split('/').pop(), 10))
+        .filter(Number.isInteger);
+    let nextSerial = serials.length ? Math.max(...serials) + 1 : 1;
+    let examCode = `${schoolCode}/${classCode}/${String(nextSerial).padStart(3, '0')}`;
+    while (existingCodes.has(normaliseExamCode(examCode))) {
+        nextSerial += 1;
+        examCode = `${schoolCode}/${classCode}/${String(nextSerial).padStart(3, '0')}`;
+    }
+
     const normalisedCode = window.normaliseExamCode ? normaliseExamCode(examCode) : examCode.toUpperCase().replace(/\s+/g, '');
 
     const now = new Date().toISOString();

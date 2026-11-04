@@ -43,8 +43,13 @@ async function handleRegisterStudent(event) {
             registeredBy:  state.user?.phone_number || null,
         });
 
-        await saveStudentToDB(student);
         const centralResult = await saveStudentToCentralOrQueue(student, a);
+        // The central server assigns the authoritative exam code. Only save
+        // the locally generated record when central sync is unavailable or
+        // queued, so IndexedDB cannot reject a stale guessed code.
+        if (centralResult.source !== 'central') {
+            await saveStudentToDB(student);
+        }
 
         showAlert(
             centralResult.source === 'central'
