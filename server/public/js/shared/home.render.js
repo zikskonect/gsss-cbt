@@ -161,8 +161,8 @@ function renderHomePage() {
                             <div class="w-full space-y-2.5 mb-4">
 
                                 <!-- Student (primary) -->
-                                <button onclick="setPage('student-login')"
-                                        class="home-role-btn home-fade-up home-d3 w-full group flex items-center gap-4 p-3 sm:p-3.5 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-0.5 active:scale-[0.99] text-left relative overflow-hidden"
+                                <button type="button" disabled aria-disabled="true" title="Student app is disabled"
+                                        class="home-role-btn home-fade-up home-d3 w-full group flex items-center gap-4 p-3 sm:p-3.5 rounded-2xl shadow-lg text-left relative overflow-hidden opacity-50 cursor-not-allowed"
                                         style="background: linear-gradient(135deg, ${themeColor} 0%, ${secondaryColor} 100%);">
                                     <div class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
                                          style="background: linear-gradient(135deg, ${secondaryColor} 0%, ${themeColor} 100%);"></div>
@@ -188,12 +188,12 @@ function renderHomePage() {
                                         <span class="text-sm font-semibold text-[#1B1D2A] text-center whitespace-nowrap">Teacher</span>
                                     </button>
 
-                                    <button onclick="setPage('exam-office-login')"
-                                            class="flex flex-col items-center justify-center gap-2 py-4 md:py-5 rounded-2xl border-2 border-black/10 bg-white hover:border-[#1B1D2A]/30 hover:shadow-md transition-all">
+                                    <button type="button" disabled aria-disabled="true" title="Exam Office app is disabled"
+                                            class="flex flex-col items-center justify-center gap-2 py-4 md:py-5 rounded-2xl border-2 border-black/10 bg-gray-100 transition-all opacity-50 cursor-not-allowed">
                                         <div class="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gray-100 flex items-center justify-center">
                                             <i data-lucide="building-2" class="w-5 h-5 text-gray-700"></i>
                                         </div>
-                                        <span class="text-sm font-semibold text-[#1B1D2A] text-center whitespace-nowrap">Exam Office</span>
+                                        <span class="text-sm font-semibold text-gray-500 text-center whitespace-nowrap">Exam Office</span>
                                     </button>
                                 </div>
 

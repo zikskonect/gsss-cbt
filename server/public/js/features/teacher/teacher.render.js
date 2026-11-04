@@ -481,7 +481,7 @@ function renderCreateExamPage(state) {
             <span class="text-sm text-gray-600">${currentCount} of ${maxQuestions} questions added</span>
             <div class="flex items-center gap-3">
                 <div class="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <div class="h-full ${assessmentType === 'CA' ? 'bg-emerald-500' : 'bg-[#B80236]'} rounded-full transition-all duration-300" style="width: ${(currentCount / maxQuestions) * 100}%"></div>
+                    <div class="h-full ${assessmentType === 'CA' ? 'bg-emerald-500' : 'bg-[#B80236]'} rounded-full transition-all duration-300" style="width: ${(currentCount / maxQuestions) * 200}%"></div>
                 </div>
                 <span class="text-xs font-bold ${assessmentType === 'CA' ? 'text-emerald-600' : 'text-[#B80236]'}">${Math.round((currentCount / maxQuestions) * 100)}%</span>
             </div>
@@ -547,7 +547,7 @@ function renderCreateExamPage(state) {
                         <h1 class="text-2xl md:text-3xl font-bold flex items-center gap-3">
                             <i data-lucide="${assessmentType === 'CA' ? 'clipboard-check' : 'graduation-cap'}" class="w-7 h-7"></i>
                             ${state.editingExamId ? 'Edit' : 'Create'} ${assessmentType === 'CA' ? 'CA' : 'Exam'}
-                            <span class="text-sm font-normal ${assessmentType === 'CA' ? 'bg-emerald-600' : 'bg-[#900028]'} px-3 py-1 rounded-full">${assessmentType === 'CA' ? 'Max 20 Qs' : 'Max 100 Qs'}</span>
+                            <span class="text-sm font-normal ${assessmentType === 'CA' ? 'bg-emerald-600' : 'bg-[#900028]'} px-3 py-1 rounded-full">${assessmentType === 'CA' ? 'Max 20 Qs' : 'Max 200 Qs'}</span>
                         </h1>
                         <p class="text-white/80 text-sm mt-1">${assessmentType === 'CA' ? 'Continuous Assessment' : 'Examination'} - ${currentCount}/${maxQuestions} questions</p>
                     </div>
@@ -573,7 +573,7 @@ function renderCreateExamPage(state) {
                             <label class="block text-sm font-semibold text-gray-700 mb-3">Assessment Type</label>
                             <div class="flex flex-wrap gap-3">
                                 <button type="button" id="ca-toggle-btn" onclick="toggleAssessmentType('CA')" class="flex items-center gap-2 py-2.5 px-6 rounded-xl font-bold text-sm transition-all border-2 ${caActive ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300'}"><i data-lucide="clipboard-check" class="w-4 h-4"></i> CA <span class="text-xs font-normal text-gray-400">(20 Qs)</span></button>
-                                <button type="button" id="exam-toggle-btn" onclick="toggleAssessmentType('EXAM')" class="flex items-center gap-2 py-2.5 px-6 rounded-xl font-bold text-sm transition-all border-2 ${examActive ? 'border-rose-500 bg-rose-50 text-rose-700' : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300'}"><i data-lucide="graduation-cap" class="w-4 h-4"></i> Exam <span class="text-xs font-normal text-gray-400">(100 Qs)</span></button>
+                                <button type="button" id="exam-toggle-btn" onclick="toggleAssessmentType('EXAM')" class="flex items-center gap-2 py-2.5 px-6 rounded-xl font-bold text-sm transition-all border-2 ${examActive ? 'border-rose-500 bg-rose-50 text-rose-700' : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300'}"><i data-lucide="graduation-cap" class="w-4 h-4"></i> Exam <span class="text-xs font-normal text-gray-400">(200 Qs)</span></button>
                             </div>
                         </div>
 
