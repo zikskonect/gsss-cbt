@@ -160,40 +160,13 @@ function renderHomePage() {
                             <!-- Role buttons -->
                             <div class="w-full space-y-2.5 mb-4">
 
-                                <!-- Student (primary) -->
-                                <button onclick="setPage('student-login')"
-                                        class="home-role-btn home-fade-up home-d3 w-full group flex items-center gap-4 p-3 sm:p-3.5 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-0.5 active:scale-[0.99] text-left relative overflow-hidden"
-                                        style="background: linear-gradient(135deg, ${themeColor} 0%, ${secondaryColor} 100%);">
-                                    <div class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                                         style="background: linear-gradient(135deg, ${secondaryColor} 0%, ${themeColor} 100%);"></div>
-                                    <div class="relative w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
-                                         style="background: rgba(255,255,255,0.2);">
-                                        <i data-lucide="clipboard-check" class="w-5 h-5 sm:w-6 sm:h-6 text-white"></i>
-                                    </div>
-                                    <div class="relative flex-1 min-w-0">
-                                        <p class="font-bold text-white text-sm sm:text-base leading-tight">Start your exam</p>
-                                        <p class="text-xs sm:text-sm text-white/85 mt-0.5">For registered students</p>
-                                    </div>
-                                    <i data-lucide="arrow-right" class="relative w-5 h-5 text-white/80 group-hover:text-white group-hover:translate-x-1 transition-transform flex-shrink-0"></i>
-                                </button>
-
-                                
-                                <!-- Secondary actions: Teacher / Exam Office -->
-                                <div class="relative z-10 grid grid-cols-2 gap-3 md:gap-4">
+                                <div class="relative z-10">
                                     <button onclick="setPage('teacher-login')"
-                                            class="flex flex-col items-center justify-center gap-2 py-4 md:py-5 rounded-2xl border-2 border-black/10 bg-white hover:shadow-md transition-all">
+                                            class="w-full flex flex-col items-center justify-center gap-2 py-4 md:py-5 rounded-2xl border-2 border-black/10 bg-white hover:shadow-md transition-all">
                                         <div class="w-10 h-10 md:w-12 md:h-12 rounded-full bg-green-100 flex items-center justify-center">
                                             <i data-lucide="presentation" class="w-5 h-5 text-green-700"></i>
                                         </div>
                                         <span class="text-sm font-semibold text-[#1B1D2A] text-center whitespace-nowrap">Teacher</span>
-                                    </button>
-
-                                    <button onclick="setPage('exam-office-login')"
-                                            class="flex flex-col items-center justify-center gap-2 py-4 md:py-5 rounded-2xl border-2 border-black/10 bg-white hover:border-[#1B1D2A]/30 hover:shadow-md transition-all">
-                                        <div class="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gray-100 flex items-center justify-center">
-                                            <i data-lucide="building-2" class="w-5 h-5 text-gray-700"></i>
-                                        </div>
-                                        <span class="text-sm font-semibold text-[#1B1D2A] text-center whitespace-nowrap">Exam Office</span>
                                     </button>
                                 </div>
 

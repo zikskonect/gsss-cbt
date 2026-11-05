@@ -252,45 +252,23 @@ class ExamController
             if ($student['status'] !== 'active') {
                 Response::error("Student is {$student['status']}", 'student_inactive', 403);
             }
-            $className = $student['class_name'];
+            $className = $student['class_name'] ?: $student['class_code'];
         }
 
         if (!$className) {
             Response::error('class_name or exam_code required', 'validation_error', 422);
         }
 
-        $where  = ['pushed_to_clients = 1'];
-        $params = ['class_name' => $className];
-
-        // Only exams whose scheduled_date is today or earlier
-        $where[] = '(scheduled_date IS NULL OR scheduled_date <= CURDATE())';
-
-        if ($since) {
-            $where[] = 'pushed_at > ?';
-            $params[] = $since;
-        }
-
-        // Param array must be indexed, so build manually
+        // Students may only see exams scheduled for the current server date.
+        // Unscheduled and past exams must never enter the student exam hall.
         $sqlParams = [];
-        $sql = 'SELECT exam_id, subject, class_name, duration, assessment_type,
-                       scheduled_date, questions_json, pushed_at
-                  FROM exams WHERE ';
-        $sqlWhere = [];
-        foreach ($where as $i => $w) {
-            if (strpos($w, '?') !== false) {
-                $sqlWhere[] = $w;
-            } else {
-                $sqlWhere[] = $w;
-            }
-        }
-        // Rebuild simple version:
         $sql = 'SELECT exam_id, subject, class_name, duration, assessment_type,
                        scheduled_date, questions_json, pushed_at
                   FROM exams
                  WHERE pushed_to_clients = 1
-                   AND class_name = ?
-                   AND (scheduled_date IS NULL OR scheduled_date <= CURDATE())';
-        $sqlParams = [$className];
+                   AND scheduled_date = CURDATE()
+                   AND (class_name = ? OR REPLACE(class_name, " ", "") = REPLACE(?, " ", ""))';
+        $sqlParams = [$className, $className];
 
         if ($since) {
             $sql .= ' AND pushed_at > ?';

@@ -109,6 +109,24 @@ const LanIntegration = {
         return { ok: false, error: { message: 'Student not found' } };
     },
 
+    /**
+     * Return only this student's pushed exams scheduled for the server's
+     * current date. The server owns the date check to avoid client clock drift.
+     */
+    async getStudentExams(examCode) {
+        if (!LAN_CONFIG.enabled || !navigator.onLine) {
+            return { ok: false, error: { code: 'offline', message: 'Offline' } };
+        }
+
+        try {
+            return await LanApi.get(
+                '/exams/for-device?exam_code=' + encodeURIComponent(examCode)
+            );
+        } catch (e) {
+            return { ok: false, error: { code: 'network', message: e.message } };
+        }
+    },
+
     async submitResult(result) {
         result.device_id = localStorage.getItem('cbt_device_id') || null;
         if (LAN_CONFIG.enabled && navigator.onLine) {

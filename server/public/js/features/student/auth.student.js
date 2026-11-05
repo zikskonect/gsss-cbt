@@ -64,6 +64,8 @@ async function handleStudentLogin(event) {
             return;
         }
 
+        localStorage.setItem('cbt_last_exam_code', student.exam_code);
+
         // ── Success ────────────────────────────────────
         clearSessionState();
         state.isStudent = true;
@@ -97,9 +99,46 @@ async function handleStudentLogin(event) {
  */
 async function loadExamsForStudent(student) {
     try {
+        // Prefer the server response while online. It applies the authoritative
+        // server date and pushed-to-client rules before returning any questions.
+        if (window.LanIntegration?.getStudentExams && navigator.onLine) {
+            const response = await LanIntegration.getStudentExams(student.exam_code);
+            if (response.ok) {
+                const exams = (response.data?.exams || []).map(exam => ({
+                    exam_id: exam.exam_id,
+                    subject: exam.subject,
+                    class: exam.class_name,
+                    duration: Number(exam.duration),
+                    assessmentType: exam.assessment_type || 'EXAM',
+                    scheduledDate: exam.scheduled_date,
+                    questions: exam.questions || [],
+                }));
+
+                state.caExams = exams.filter(exam => exam.assessmentType === 'CA');
+                state.todayExams = exams.filter(exam => exam.assessmentType !== 'CA');
+                state.availableExams = exams;
+                state.studentTab = state.caExams.length > 0 ? 'ca' : 'today';
+                if (exams.length === 0) {
+                    showAlert(
+                        `No exams scheduled today for ${student.class_name || student.class_code}.`,
+                        'info',
+                        6000
+                    );
+                }
+                return;
+            }
+        }
+
+        // Offline fallback: apply the same exact-date rule to cached exams.
         const allExams = await loadAllExamsFromDB();
         const studentClassCode = student.class_code;
         const studentClassName = student.class_name || student.class_code;
+        const today = new Date();
+        const todayKey = [
+            today.getFullYear(),
+            String(today.getMonth() + 1).padStart(2, '0'),
+            String(today.getDate()).padStart(2, '0'),
+        ].join('-');
 
         const filtered = (allExams || []).filter(exam => {
             const examClass = exam.class?.toString().trim();
@@ -110,13 +149,13 @@ async function loadExamsForStudent(student) {
                 normalise(examClass) === normalise(studentClassName) ||
                 normalise(examClass) === normalise(studentClassCode);
 
-            // Only scheduled exams (CAs excluded — they're added separately later)
-            const isScheduled = exam.scheduledDate != null && exam.scheduledDate !== '';
-
-            return classMatch && isScheduled;
+            return classMatch && exam.scheduledDate === todayKey;
         });
 
+        state.caExams = filtered.filter(exam => (exam.assessmentType || 'EXAM') === 'CA');
+        state.todayExams = filtered.filter(exam => (exam.assessmentType || 'EXAM') !== 'CA');
         state.availableExams = filtered;
+        state.studentTab = state.caExams.length > 0 ? 'ca' : 'today';
 
         if (filtered.length === 0) {
             showAlert(`No scheduled exams found for ${studentClassName}.`, 'info', 6000);

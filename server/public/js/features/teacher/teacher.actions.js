@@ -809,8 +809,9 @@ async function shareExamAsCSV(examId) {
         const fileName = `${exam.subject.replace(/[^a-z0-9]/gi, '_')}_${exam.class}_Exam.csv`;
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
 
-        // Check if it's a desktop browser (no touch, large screen)
-        const isDesktop = !('ontouchstart' in window) && navigator.maxTouchPoints === 0;
+        const isNativeApp = window.Capacitor?.isNativePlatform?.() === true;
+        const isMobileBrowser = /Android|iPhone|iPad|iPod|Windows Phone/i.test(navigator.userAgent);
+        const isDesktop = !isNativeApp && !isMobileBrowser;
 
         if (isDesktop) {
             // Desktop fallback: just download
@@ -819,16 +820,17 @@ async function shareExamAsCSV(examId) {
         }
 
         // Mobile: Capacitor native share
-        if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Share) {
+        if (isNativeApp && window.Capacitor.Plugins?.Filesystem && window.Capacitor.Plugins.Share) {
             try {
-                const result = await window.Capacitor.Plugins.Filesystem.writeFile({
+                const { Filesystem, Share } = window.Capacitor.Plugins;
+                const result = await Filesystem.writeFile({
                     path: fileName,
                     data: csvContent,
-                    directory: window.Capacitor.Plugins.Filesystem.Directory.Cache,
-                    encoding: window.Capacitor.Plugins.Filesystem.Encoding.UTF8
+                    directory: Filesystem.Directory?.Cache || 'CACHE',
+                    encoding: Filesystem.Encoding?.UTF8 || 'utf8'
                 });
 
-                await window.Capacitor.Plugins.Share.share({
+                await Share.share({
                     title: `${exam.subject} Exam`,
                     text: `Exam: ${exam.subject} (${exam.class})`,
                     files: [result.uri]
@@ -842,10 +844,10 @@ async function shareExamAsCSV(examId) {
         }
 
         // Mobile: Web Share API (fallback)
-        if (navigator.share && navigator.canShare) {
+        if (navigator.share) {
             try {
                 const file = new File([blob], fileName, { type: 'text/csv' });
-                if (navigator.canShare({ files: [file] })) {
+                if (!navigator.canShare || navigator.canShare({ files: [file] })) {
                     await navigator.share({
                         files: [file],
                         title: `${exam.subject} Exam`,
